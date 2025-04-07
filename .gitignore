@@ -1,0 +1,10 @@
+build/
+dist/
+CBC_estimator.egg-info/
+.eggs/
+.idea/*
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+/examples/publication/files/
