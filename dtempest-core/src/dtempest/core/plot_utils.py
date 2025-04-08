@@ -77,10 +77,6 @@ def _set_corner_limits(fig: plt.Figure, lims: tuple[float, float], pos: int):
         Limits for rescaling the axis.
     pos :
         Position (index) of the parameter in the corner plot.
-
-    Returns
-    -------
-
     """
     axes = fig.get_axes()
     nparams = int(np.sqrt(len(axes)))
@@ -110,10 +106,6 @@ def set_corner_limits(fig: plt.Figure, limits: dict[int, tuple[float, float]]):
         Matplotlib Figure containing the corner.
     limits :
         Dictionary of the form {index: (lower_lim, upper_lim)}.
-
-    Returns
-    -------
-
     """
     for pos, lims in limits.items():
         _set_corner_limits(fig, lims, pos)
@@ -132,10 +124,6 @@ def redraw_legend(artist, *args, pos: int = 0, **kwargs):
         If there are multiple legends, specify position on list.
     kwargs :
         Keyword arguments of plt.legend.
-
-    Returns
-    -------
-
     """
 
     from matplotlib.legend import Legend
@@ -169,9 +157,6 @@ def change_legend_loc(artist, loc: str | int, pos: int = 0):
         New position.
     pos :
         If there are multiple legends, specify position on list.
-
-    -------
-
     """
     if isinstance(artist, plt.Axes):
         legend = artist.get_legend()

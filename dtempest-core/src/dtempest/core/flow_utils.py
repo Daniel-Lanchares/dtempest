@@ -1,3 +1,6 @@
+"""
+Flow transforms and utilities.
+"""
 import torch
 from typing import Callable
 from glasflow.nflows import distributions, flows, transforms, utils
@@ -5,7 +8,7 @@ import glasflow.nflows.nn.nets as nflows_nets
 import torch.nn.functional as F
 
 
-def create_flow(  # Adapted from DINGO
+def create_flow(
         input_dim: int,
         context_dim: int,
         num_flow_steps: int,
@@ -13,27 +16,37 @@ def create_flow(  # Adapted from DINGO
         base_transform_kwargs: dict, middle_transform_kwargs: dict,
         final_transform: Callable, final_transform_kwargs: dict,
         emb_net=None,
-        scales=None,  # Here for backwards-compatibility
-        shifts=None,  # Here for backwards-compatibility
 ):
     """
+    Adapted from https://github.com/dingo-gw/dingo/tree/main/dingo.
+
     Build NSF model. This models the posterior distribution p(y|x).
     The model consists of
         * a base distribution (StandardNormal, dim(y))
         * a sequence of transforms, each conditioned on x
     :param input_dim: int,
-        dimensionality of y
+        Dimensionality of y.
     :param context_dim: int,
-        dimensionality of the (embedded) context
+        Dimensionality of the (embedded) context.
     :param num_flow_steps: int,
-        number of sequential transforms
+        Number of sequential transforms.
+    :param base_transform: Callable,
+        Main transform of a flow step. Context-sensitive.
+    :param middle_transform: Callable,
+        Intermediate transform of a flow step. Need not be context-sensitive.
     :param base_transform_kwargs: dict,
-        hyperparameters for the transform repeated in every step
-    :param emb_net: torch.nn.Module, None
-        Embedding net for the flow
+        Hyperparameters for the base transform, repeated in every step.
+    :param middle_transform_kwargs: dict,
+        Hyperparameters for the middle transform, repeated in every step.
+    :param final_transform: Callable,
+        Last transform of the samples. Need not be context-sensitive.
+    :param final_transform_kwargs: dict,
+        Hyperparameters for the final transform.
+    :param emb_net: torch.nn.Module, None,
+        Embedding net for the flow.
 
     :return: Flow
-        the NSF (posterior model)
+        The posterior model.
     """
 
     # We will always start from a N(0, 1)
@@ -44,23 +57,7 @@ def create_flow(  # Adapted from DINGO
         base_transform_kwargs, middle_transform_kwargs,
         final_transform, final_transform_kwargs
     )
-    flow = flows.Flow(transform, distribution, embedding_net=emb_net)
-
-    # # Store hyperparameters. This is for reconstructing model when loading from
-    # # saved file.
-    #
-    # flow.model_hyperparams = {
-    #     'input_dim': input_dim,
-    #     'num_flow_steps': num_flow_steps,
-    #     'context_dim': context_dim,
-    #
-    #     'base_transform': base_transform,
-    #     'base_transform_kwargs': base_transform_kwargs,
-    #     'final_transform': final_transform,
-    #     'final_transform_kwargs': final_transform_kwargs,
-    # }
-
-    return flow
+    return flows.Flow(transform, distribution, embedding_net=emb_net)
 
 
 def create_transform(
@@ -70,26 +67,37 @@ def create_transform(
         final_transform: Callable, final_transform_kwargs: dict
 ):
     """
-    Right now straight from DINGO. Will adapt as needed
+    Adapted from https://github.com/dingo-gw/dingo/tree/main/dingo.
     
-    Build a sequence of NSF transforms, which maps parameters y into the
+    Build a sequence of custom transforms, which maps parameters y into the
     base distribution u (noise). Transforms are conditioned on context data x.
 
     Note that the forward map is f^{-1}(y, x).
 
     Each step in the sequence consists of
-        * A linear transform of y, which in particular permutes components
-        * A NSF transform of y, conditioned on x.
-    There is one final linear transform at the end.
+        * An custom intermediate transform of y, usually context-insensitive.
+        * A complex (NSF+affine in the example) transform of y, conditioned on x.
+    There is one final customizable transform at the end.
 
     :param num_flow_steps: int,
-        number of transforms in sequence
+        Number of transforms in sequence.
     :param param_dim: int,
-        dimensionality of parameter space (y)
+        Dimensionality of parameter space (y).
     :param context_dim: int,
-        dimensionality of context (x)
-    :param base_transform_kwargs: int
-        hyperparameters for NSF step
+        Dimensionality of context (x).
+    :param base_transform: Callable,
+        Main transform of a flow step. Context-sensitive.
+    :param middle_transform: Callable,
+        Intermediate transform of a flow step. Need not be context-sensitive.
+    :param base_transform_kwargs: dict,
+        Hyperparameters for the base transform, repeated in every step.
+    :param middle_transform_kwargs: dict,
+        Hyperparameters for the middle transform, repeated in every step.
+    :param final_transform: Callable,
+        Last transform of the samples. Need not be context-sensitive.
+    :param final_transform_kwargs: dict,
+        Hyperparameters for the final transform.
+
     :return: Transform
         the NSF transform sequence
     """
@@ -431,7 +439,7 @@ transform_ref = {f.__name__: f for f in [random_perm_and_lulinear,
 
 
 def get_activation_function_from_string(activation_name: str):
-    """ From dingo library
+    """
     Returns an activation function, based on the name provided.
 
     :param activation_name: str

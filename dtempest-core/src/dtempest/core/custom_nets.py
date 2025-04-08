@@ -1,12 +1,10 @@
-# -*- coding: utf-8 -*-
 """
-Created on Tue Aug  1 11:54:41 2023
+Custom implementation of ResNets for experiments with architectures.
 
-@author: danie
+Original source: https://github.com/FrancescoSaverioZuppichini/ResNet
 """
 
 import torch.nn as nn
-
 from functools import partial
 from collections import OrderedDict
 

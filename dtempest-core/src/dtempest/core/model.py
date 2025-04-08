@@ -99,12 +99,12 @@ class Estimator:
         self.estimation_parameters = np.asarray(estimation_parameters)
 
         if 'scales' in flow_config.keys():
-            self.scales = self._get_scales(flow_config['scales'])
+            self.scales = self._get_scales(flow_config.pop('scales'))
         else:
             self.scales = torch.ones(len(self.estimation_parameters))
 
         if 'shifts' in flow_config.keys():
-            self.shifts = self._get_shifts(flow_config['shifts'])
+            self.shifts = self._get_shifts(flow_config.pop('shifts'))
         else:
             self.shifts = torch.zeros(len(self.estimation_parameters))
 

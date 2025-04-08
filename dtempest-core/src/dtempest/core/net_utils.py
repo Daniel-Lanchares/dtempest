@@ -1,5 +1,7 @@
+"""
+Utilities for neural networks.
+"""
 import torch.nn as nn
-
 from torchvision import models
 
 from .custom_nets import ResNet, ResNetBasicBlock
@@ -13,7 +15,22 @@ Source for feature extractor: https://pytorch.org/tutorials/beginner/transfer_le
 '''
 
 
-def create_feature_extractor(n_features, base_net=models.resnet18(weights=models.ResNet18_Weights.DEFAULT)):
+def create_feature_extractor(n_features: int, base_net=models.resnet18(weights=models.ResNet18_Weights.DEFAULT)):
+    """
+    Adapts a (potentially pre-trained) ResNet into a given number of features with a Linear Module.
+
+    Parameters
+    ----------
+    n_features :
+        Output size of the reconverted model.
+    base_net :
+        Original model.
+
+    Returns
+    -------
+    out:
+        Feature extractor for transfer learning.
+    """
     for param in base_net.parameters():
         param.requires_grad = False
 
@@ -24,9 +41,8 @@ def create_feature_extractor(n_features, base_net=models.resnet18(weights=models
 
 
 def create_full_net(input_channels: int = None, output_length: int = None,
-                    block=ResNetBasicBlock, depths=[2, 2, 2, 2], pytorch_net: bool = True, *args, **kwargs):
-    '''
-    
+                    block=ResNetBasicBlock, depths=None, pytorch_net: bool = True, *args, **kwargs):
+    """
     Creates the ResNet architecture. ResNet-18 by default
 
     Parameters
@@ -34,22 +50,24 @@ def create_full_net(input_channels: int = None, output_length: int = None,
     input_channels : int
         Channels of the image (Number of detectors).
     output_length : int
-        If alone: Number of parameters to do the regresion on.
-        If hooked to normalizing flow: Number of features to train the flow on
+        If alone: Number of parameters to do the regression on.
+        If hooked to normalizing flow: Number of features to train the flow on.
     block : object, optional
         Block type for the net. The default is ResNetBasicBlock.
     depths : list[int], optional
         Number of blocks in each layer. The default is [2, 2, 2, 2].
     pytorch_net :
-        whether to use pytorch's ResNet class
+        Whether to use pytorch's ResNet class.
 
     Returns
     -------
     object
-        The resisual network.
+        The residual network.
 
-    '''
+    """
 
+    if depths is None:
+        depths = [2, 2, 2, 2]
     if pytorch_net:
         if block not in [models.resnet.BasicBlock, models.resnet.Bottleneck]:
             block = models.resnet.BasicBlock
