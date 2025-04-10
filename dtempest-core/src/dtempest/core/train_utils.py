@@ -1,10 +1,12 @@
 import numpy as np
 from pathlib import Path
+from collections.abc import Callable
 
 import h5py
 import torch
 import torch.nn as nn
 from torch.optim import SGD, Adam
+from torch.utils.data import DataLoader
 from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR, StepLR, CosineAnnealingLR
 
 sched_dict = {'Plateau': ReduceLROnPlateau,
@@ -17,11 +19,21 @@ loss_dict = {'MSE': nn.MSELoss, 'CE': nn.CrossEntropyLoss}
 
 class H5Dataset(torch.utils.data.Dataset):
     """
-    HDF5 based dataset for RAM efficiency.
+    HDF5 based dataset for RAM efficiency. Returns (image(s), label(s)) pairs when sliced.
 
+    Parameters
+    ----------
+    path :
+        Path to the dataset, including name.
+    kind :
+        Whether it is training data, validation, or testing. The default is training.
+    name :
+        Optional name for better traceability in further stages of the process.
+
+    Notes
+    ----------
     Adapted from:
-    https://discuss.pytorch.org/t/dataloader-when-num-worker-0-there-is-bug/25643/16?fbclid=IwAR2jFrRkKXv4PL9urrZeiHT_a3eEn7eZDWjUaQ-zcLP6BRtMO7e0nMgwlKU
-
+    https://discuss.pytorch.org/t/dataloader-when-num-worker-0-there-is-bug/25643/16
     """
 
     def __init__(self, path, kind: str = 'training', name=None):
@@ -41,29 +53,32 @@ class H5Dataset(torch.utils.data.Dataset):
         return self.dataset['images'][index], self.dataset['labels'][index]
 
     def get_metadata(self, dict_type=True):
+        """Extract dataset metadata from the HDF5's attrs system."""
         file = h5py.File(self.file_path, 'r')
         if dict_type:
-            # TODO: Return proper dicts within dicts
+            # TODO: Return proper dicts within dicts: return construct_recursive_dict(file.attrs.items())
             return dict(file.attrs.items())
         return file.attrs
 
     def get_snr(self, index):
+        """Retrieve SNR data.""" #May be better off as a method of a GW-subclass.
         if self.dataset is None:
             self.dataset = h5py.File(self.file_path, 'r')[self.kind]
         return self.dataset['snrs'][index]
 
     def iter_column(self, column):
+        """Iterate over a given column"""
         if self.dataset is None:
             self.dataset = h5py.File(self.file_path, 'r')[self.kind]
         return (self.dataset[column][index] for index in range(self.dataset_len))
 
     def __len__(self):
         return self.dataset_len
-    
-    # def rescale(self, model, override=False):
-    #     np.divide(x, self.scales.numpy()) - self.shifts.numpy()
+
+
 
 def loss_print(epoch: int, losses: list, code='train', fmt='.3'):
+    """Print loss values and their delta during training."""
     temp_loss = np.array(losses).mean(axis=1)
     deviation = np.array(losses).std(axis=1)
     if epoch > 0:
@@ -76,7 +91,31 @@ def loss_print(epoch: int, losses: list, code='train', fmt='.3'):
     print(msg)
 
 
-def train_model(model, dataloader, train_config, valiloader, data_transforms, device):
+def train_model(model: nn.Module,
+                dataloader: DataLoader,
+                train_config: dict,
+                valiloader: DataLoader,
+                data_transforms: tuple[Callable, np.ndarray, np.ndarray],
+                device: str):
+    """
+    Main train loop.
+
+    Parameters
+    ----------
+    model :
+        Internal model of the Estimator class.
+    dataloader :
+        Feeder structure built from a dataset.
+    train_config :
+        Configuration dictionary for the training stage.
+    valiloader :
+        Feeder structure for the validation data.
+    data_transforms :
+        Collection of preprocess transformations for the data.
+        Of form (image preprocessing function, parameter scales array, parameter shifts array).
+    device :
+        String code for device (mainly 'cpu' or 'cuda').
+    """
     n_epochs = train_config['num_epochs']
     lr = train_config['learning_rate']
     opt = opt_dict[train_config['optim_type']](model.parameters(), lr)

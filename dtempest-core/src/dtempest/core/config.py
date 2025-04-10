@@ -21,6 +21,9 @@ _no_jargon = {
 
 
 class Jargon(dict):  # TODO: add key enforcement.
+    """
+    Jargon base class. Allows different modules to employ a different vocabulary.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if not self:

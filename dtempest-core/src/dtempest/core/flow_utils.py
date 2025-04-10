@@ -142,6 +142,8 @@ def mask_affine_autoreg(i: int,
                         activation: str | Callable = F.relu,
                         dropout_probability=0.0,
                         use_batch_norm: bool = False):
+    """Reverse permutation + masked affine autoregressive transform.
+    See https://arxiv.org/abs/1705.07057 for the later."""
     if type(activation) is str:
         activation = get_activation_function_from_string(activation)
     return transforms.CompositeTransform([
@@ -289,6 +291,8 @@ def dingo_rq_coupling(i: int,
                       tail_bound: float = 1.0,
                       apply_unconditional_transform: bool = False,
                       ):
+    """Dingo's implementation of a rq-coupling transform.
+    https://github.com/dingo-gw/dingo/blob/main/dingo/core/nn/nsf.py#L99"""
     if type(activation) is str:
         activation = get_activation_function_from_string(activation)
     if param_dim == 1:
@@ -330,6 +334,8 @@ def dingo_rq_autoreg(i: int,
                      tail_bound: float = 1.0,
                      apply_unconditional_transform: bool = False,
                      ):
+    """Dingo's implementation of a rq-autoregressive transform.
+        https://github.com/dingo-gw/dingo/blob/main/dingo/core/nn/nsf.py#L126"""
     return transforms.MaskedPiecewiseRationalQuadraticAutoregressiveTransform(
         features=param_dim,
         hidden_features=hidden_dim,
@@ -360,6 +366,7 @@ def d_rq_coupling_and_affine(i: int,
                              use_residual_blocks=True,
                              random_mask=False,
                              ):
+    """Composition of rq-coupling and autoregressive transforms 1 to 1."""
     return transforms.CompositeTransform([
         dingo_rq_coupling(i,
                           param_dim,
@@ -399,6 +406,7 @@ def d_rq_coupling_half_affine(i: int,
                             use_residual_blocks=True,
                             random_mask=False,
                             ):
+    """Composition of rq-coupling and autoregressive transforms 2 to 1."""
     if i % 2 == 0:
         return d_rq_coupling_and_affine(i,
                                         param_dim,
