@@ -85,10 +85,11 @@ def train_model(model, dataloader, train_config, valiloader, data_transforms, de
         sched_type = train_config['sched_kwargs'].pop('type')
         sched = sched_dict[sched_type](opt, **(train_config['sched_kwargs']))
     else:
+        sched_type = None
         sched = None
 
-    if 'checkpoint_every_x_epochs' in train_config and train_config['checkpoint_every_x_epochs'] is not None:
-        checkpt = train_config['checkpoint_every_x_epochs']
+    # if 'checkpoint_every_x_epochs' in train_config and train_config['checkpoint_every_x_epochs'] is not None:
+    #     checkpt = train_config['checkpoint_every_x_epochs']
 
     preprocess, scales, shifts = data_transforms
 
@@ -148,7 +149,11 @@ def train_model(model, dataloader, train_config, valiloader, data_transforms, de
 
         # Update Scheduler
         if sched is not None:
-            sched.step()  # TODO Implement possibility for schedulers that take loss values. Not urgent
+            if sched_type == 'Plateau':
+                assert valiloader is not None, "Scheduler 'Plateau' requires validation metrics to update"
+                sched.step(np.mean(vali_losses[-1]))
+            else:
+                sched.step()
 
     # For manually variable lr
     # for g in optim.param_groups:
