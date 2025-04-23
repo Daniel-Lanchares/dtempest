@@ -444,7 +444,14 @@ transform_ref = {f.__name__: f for f in [random_perm_and_lulinear,
                                          dingo_rq_coupling,
                                          d_rq_coupling_and_affine,
                                          d_rq_coupling_half_affine]}
-
+hidden_layer_dict = {random_perm_and_lulinear: 0,
+                     mask_affine_autoreg: 2,
+                     mask_piece_q_autoreg: None,
+                     mask_piece_rq_autoreg: None,
+                     dingo_rq_autoreg: 2,
+                     dingo_rq_coupling: 2,
+                     d_rq_coupling_and_affine: 4,
+                     d_rq_coupling_half_affine: 3} # Actually, it is 4,2,4,2,4...
 
 def get_activation_function_from_string(activation_name: str):
     """
@@ -463,3 +470,10 @@ def get_activation_function_from_string(activation_name: str):
         return F.leaky_relu
     else:
         raise ValueError("Invalid activation function.")
+
+
+def get_transform_hidden_layers(t: Callable, kwargs):
+    # raise NotImplementedError
+    assert 'num_transform_blocks' in kwargs.keys(), "Current implementation of hidden layer enumeration requieres 'num_transform_blocks'."
+    assert t in hidden_layer_dict.keys(), "Current implementation of hidden layer enumeration is only valid for dtempest transforms."
+    return kwargs['num_transform_blocks']*hidden_layer_dict[t]

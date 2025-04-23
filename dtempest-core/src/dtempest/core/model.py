@@ -13,8 +13,8 @@ from tqdm import tqdm
 
 from .config import no_jargon
 from .common_utils import identity
-from .flow_utils import create_flow
-from .net_utils import create_feature_extractor, create_full_net
+from .flow_utils import create_flow, get_transform_hidden_layers
+from .net_utils import create_feature_extractor, create_full_net, numel
 from .train_utils import train_model, H5Dataset
 from .sample_utils import SampleSet, SampleDict, MSEDataFrame, MSESeries
 
@@ -238,6 +238,39 @@ class Estimator:
             # To ensure models trained on a GPU can be loaded on a CPU later
             self.model_to_device('cpu')
         torch.save((self.model.state_dict(), self.metadata), self.workdir / savefile)
+
+    def numel(self, component: str = 'all', only_trainable: bool = False) -> int:
+        """
+        Measures the number of neural parameters of a component of the model
+
+        Parameters
+        ----------
+        component :
+            Module to measure. Either the embedding net, the flow, or both.
+        only_trainable :
+            Whether to ignore non-trainable parameters. The default is False.
+
+        Returns
+        -------
+        out :
+            Number (integer) of parameters
+        """
+
+        if component == 'all':
+            return numel(self.model, only_trainable)
+        elif component == 'net':
+            assert self.model._embedding_net is not None, 'The model has no embedding net'
+            return numel(self.model._embedding_net, only_trainable)
+        elif component == 'flow':
+            net_params = 0 if self.model._embedding_net is None else numel(self.model._embedding_net, only_trainable)
+            return numel(self.model, only_trainable) - net_params
+        else:
+            raise ValueError("Selected component non understood. Posible values are 'net', 'flow' or 'all'.")
+
+    def numel_hidden_flow_layers(self):
+        """Get the number (approx.) of hidden layers. Only works for some transforms."""
+        nsteps, base_t, base_t_kwargs = self.metadata['num_flow_steps'], self.metadata['base_transform'], self.metadata['base_transform_kwargs']
+        return nsteps*get_transform_hidden_layers(base_t, base_t_kwargs)
 
     @property
     def name(self):

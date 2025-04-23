@@ -88,3 +88,16 @@ def create_full_net(input_channels: int = None, output_length: int = None,
 
 
 
+def numel(m: nn.Module, only_trainable: bool = False):
+    """
+    https://stackoverflow.com/questions/49201236/check-the-total-number-of-parameters-in-a-pytorch-model
+    Returns the total number of parameters used by `m` (only counting
+    shared parameters once); if `only_trainable` is True, then only
+    includes parameters with `requires_grad = True`
+    """
+    parameters = list(m.parameters())
+    if only_trainable:
+        parameters = [p for p in parameters if p.requires_grad]
+    unique = {p.data_ptr(): p for p in parameters}.values()
+    return sum(p.numel() for p in unique)
+
