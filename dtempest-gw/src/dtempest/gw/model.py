@@ -1,5 +1,6 @@
-from functools import partialmethod
+"""CBC Estimator model"""
 
+from functools import partialmethod
 from dtempest.core import Estimator
 
 from .config import cbc_jargon
@@ -14,7 +15,8 @@ class_dict = {
 
 
 class CBCEstimator(Estimator):
-
+    """Posterior model for CBC analysis."""
+    # __doc__ += Estimator.__doc__
     __init__ = partialmethod(Estimator.__init__, jargon=cbc_jargon)
     sample_dict = partialmethod(Estimator.sample_dict, _class_dict=class_dict)
     sample_set = partialmethod(Estimator.sample_set, _class_dict=class_dict)

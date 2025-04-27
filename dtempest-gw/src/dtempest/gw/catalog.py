@@ -1,7 +1,6 @@
 """This module adds catalog related functionality to test models on real data"""
-from copy import deepcopy
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 
 from pycbc.catalog import Catalog as pycbc_Catalog
 from pycbc.catalog import Merger as pycbc_Merger
@@ -10,8 +9,7 @@ from pycbc.catalog.catalog import get_source
 
 from dtempest.core.data_utils import make_image_array, make_model_array
 from .config import cbc_jargon
-# from dtempest.gw.generation.generation_utils import get_psd
-# from dtempest.gw.generation.parallel import default_config as default_gen_config
+
 
 full_names = {
     'GW190412': 'GW190412_053044',
@@ -30,7 +28,8 @@ class Merger(pycbc_Merger, dict):
                  frange: tuple[float, float] = (20.0, 300.0),
                  duration: int = 4,
                  **extra_qtrans_kwargs):
-        """ Return the information of a merger
+        """
+        Container of the necessary information regarding a CBC merger.
 
         Parameters
         ----------
@@ -104,19 +103,23 @@ class Merger(pycbc_Merger, dict):
         rep = "{'" + str(items[0][0]) + "': " + str(items[0][1]) + " ... }"
         return rep
 
-    def process_strains(self):
+    def process_strains(self) -> dict[str, np.ndarray]:
+        """
+        Converts strains into a 2D time-frequency representation.
+        Returns
+        -------
+        out:
+            Dict of q-transforms representing the individual channels of the image.
+            Each key-value pair of the form ('detector-code', np.ndarray).
+
+        """
         from .generation.artemisa_gen import ifo_q_transform
         from gwpy.timeseries import TimeSeries
         channels = {}
         for ifo in self.detectors:
-            # q_window = (self.time + self.image_window[0], self.time + self.image_window[1])
-            # ts = self.strain(ifo)
-            # channels[ifo] = process_strain(ts._return(np.nan_to_num(ts)), ifo, q_window)
-            # ts = self.strain(ifo)
-            ts = TimeSeries.from_pycbc(self.strain(ifo))#(whiten(ts, get_psd(ts)))
+            ts = TimeSeries.from_pycbc(self.strain(ifo))
             ts = ts.whiten(window='tukey')  # Tukey seems to be what bilby uses, min differences between generation and gathering pipelines
             ts = ts.crop(self.time - self.duration/2, self.time + self.duration/2)
-            # print(ts.duration)
             channels[ifo] = ifo_q_transform(ts.value,
                                                 resol=self.img_res,
                                                 duration=ts.duration,
@@ -127,38 +130,55 @@ class Merger(pycbc_Merger, dict):
         return channels
 
     def make_image(self):
+        """
+        Creates array compatible with plt.imshow, of shape (M, N, 3),
+        from injection's dictionary or model array directly.
+        """
         return make_image_array(self, cbc_jargon)
 
     def make_array(self):
+        """
+        Creates array apt to be fed to models, of shape (3, M, N), from injection's dictionary.
+        """
         return make_model_array(self, cbc_jargon)
 
-    def imshow(self, ax=None, *args, **kwargs):
+    def imshow(self, ax: plt.Axes = None, *args, **kwargs):
+        """
+        Plot image of merger on given axis.
+        Parameters
+        ----------
+        ax :
+            Matplotlib.pyplot Axis in which to plot
+        args :
+            Arguments for plt.imshow.
+        kwargs :
+            Keyword arguments for plt.imshow.
+
+        Returns
+        -------
+        out:
+            Image axis.
+        """
         if ax is None:
             return plt.imshow(make_image_array(self, cbc_jargon), *args, **kwargs)
         return ax.imshow(make_image_array(self, cbc_jargon), *args, **kwargs)
 
 
-# default_config = {
-#     'img_res': (128, 128)
-# }
-
-
 class Catalog(pycbc_Catalog):
     def __init__(self,
                  source: str = 'gwtc-1',
-                 # config: dict = None,
                  **merger_kwargs):
-        # if config is None:
-        #     config = {}
+        """
+
+        Parameters
+        ----------
+        source :
+            Catalog to query.
+        merger_kwargs :
+            Keyword arguments to be passed to the individual Merger constructor.
+        """
 
         self.source = source
-
-        # self.config = deepcopy(default_config)
-        # for attr, val in config.items():
-        #     if attr not in self.config.keys():
-        #         raise KeyError(f'Specified key ({attr}) misspelled or not implemented')
-        #     self.config[attr] = val
-
         self.data = get_source(source=self.source)
         self.mergers = {name: Merger(name,
                                      source=source,
@@ -167,10 +187,10 @@ class Catalog(pycbc_Catalog):
         self.common_names = [self.mergers[m].common_name for m in self.mergers]
 
     def __delitem__(self, key):
-        try:
+        try: # Delete using the full name.
             del self.mergers[key]
         except KeyError:
-            # Try common name
+            # Try common name.
             for m in self.mergers:
                 if key == self.mergers[m].common_name:
                     break

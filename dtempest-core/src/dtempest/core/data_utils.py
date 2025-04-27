@@ -8,9 +8,9 @@ from typing import Callable
 from .config import no_jargon
 
 
-def make_image_array(data: dict | np.ndarray, jargon: dict = None):
+def make_image_array(data: dict | np.ndarray, jargon: dict = None) -> np.ndarray:
     """
-    Creates array compatible with plt.imshow (M, N, 3)
+    Creates array compatible with plt.imshow, of shape (M, N, 3),
     from injection's dictionary or model array directly.
     """
     if jargon is None:
@@ -27,9 +27,9 @@ def make_image_array(data: dict | np.ndarray, jargon: dict = None):
     return image_arr
 
 
-def make_model_array(data: dict, jargon: dict = None):
+def make_model_array(data: dict, jargon: dict = None) -> np.ndarray:
     """
-    Creates array apt to be fed to models (3, M, N) from injection's dictionaty.
+    Creates array apt to be fed to models, of shape (3, M, N), from injection's dictionary.
 
     """  # TODO: study n-channel cases, update for image arrays
     if jargon is None:
@@ -114,7 +114,7 @@ def calc_parameter(param: str, pool: dict[str, Callable], params_dict) -> float:
         return pool[param](**missing_dict, **params_dict)
 
 
-def get_parameter_alias(parameter, jargon: dict = None):
+def get_parameter_alias(parameter, jargon: dict = None) -> str:
     """
     Returns alias of given parameter. Used for plotting.
     """
@@ -138,7 +138,7 @@ def get_parameter_alias(parameter, jargon: dict = None):
     return r'${}$'.format(alias)
 
 
-def get_parameter_units(parameter, jargon: dict = None):
+def get_parameter_units(parameter, jargon: dict = None) -> str:
     """
     Returns units of given parameter. Used for plotting.
     """

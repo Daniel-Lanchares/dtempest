@@ -1,7 +1,10 @@
-from functools import partialmethod
-from pathlib import Path
-
+"""
+Classes and utilities for GW-adapted sampling.
+"""
 import numpy as np
+from pathlib import Path
+from functools import partialmethod
+
 
 from dtempest.core._pesummary_dependencies.samples_dict import MultiAnalysisSamplesDict
 from dtempest.core.sample_utils import SampleDict, SampleSet, MSEDataFrame, MSESeries, ComparisonSampleDict

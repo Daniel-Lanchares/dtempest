@@ -101,7 +101,7 @@ def luminosity_distance(z, **kwargs):
 
 d_L = luminosity_distance
 
-redef_dict = {  # MANY MISSING (redshift) #TODO
+redef_dict = {  # MANY MISSING (redshift)
     'mass_1': mass_1,
     'mass_2': mass_2,
     'chirp_mass': chirp_mass,
@@ -117,7 +117,7 @@ redef_dict = {  # MANY MISSING (redshift) #TODO
     'luminosity_distance': luminosity_distance
 }
 
-unit_dict = {  # MANY MISSING #TODO
+unit_dict = {  # MANY MISSING
     'mass_1': r'$M_{\odot}$',
     'mass_2': r'$M_{\odot}$',
     'chirp_mass': r'$M_{\odot}$',
@@ -136,7 +136,7 @@ unit_dict = {  # MANY MISSING #TODO
     'dec': r'$rad$'
 }
 
-alias_dict = {  # MANY MISSING #TODO
+alias_dict = {  # MANY MISSING
     'mass_1': r'$m_1$',
     'mass_2': r'$m_2$',
     'chirp_mass': r'$\mathcal{M}$',

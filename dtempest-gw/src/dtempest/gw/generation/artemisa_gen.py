@@ -284,7 +284,11 @@ def generate_timeseries(prior_sample,
             prior_sample['luminosity_distance'] = prior_sample['luminosity_distance'] * np.prod(snr_ratios)
 
 
-def ifo_q_transform(tseries: np.ndarray, resol=(128, 128), duration=2, sampling_frequency=1024, **qtrans_kwargs):
+def ifo_q_transform(tseries: np.ndarray,
+                    resol=(128, 128),
+                    duration=2,
+                    sampling_frequency=1024,
+                    **qtrans_kwargs) -> np.ndarray:
     """
     Converts a timeseries into a one-channel image of shape 'resol'.
 
