@@ -7,4 +7,4 @@ CBC_estimator.egg-info/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-/examples/publication/files/
+/v1/examples/publication/files/

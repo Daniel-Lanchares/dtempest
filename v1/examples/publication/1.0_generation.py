@@ -7,7 +7,7 @@ import bilby
 from gwpy.timeseries import TimeSeries
 from bilby.core.utils.log import logger as bilby_logger
 
-from dtempest.gw.generation import generate
+from dtempest.gw import generate
 
 if __name__ == '__main__':
 

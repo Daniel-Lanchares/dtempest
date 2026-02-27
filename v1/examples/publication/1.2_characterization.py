@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from dtempest.core.train_utils import H5Dataset
-from dtempest.gw.utils import get_parameter_alias, get_parameter_units
+from dtempest.gw import get_parameter_alias, get_parameter_units
 
 
 def load_and_plot(axs, dataset: H5Dataset, max_events: int = None, label:str = None, **hist_kwargs):

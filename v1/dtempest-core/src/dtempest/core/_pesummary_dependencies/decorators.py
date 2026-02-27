@@ -159,7 +159,7 @@ def tmp_directory(func):
         import os
 
         current_dir = os.getcwd()
-        with tempfile.TemporaryDirectory(dir="./") as path:
+        with tempfile.TemporaryDirectory(dir="/") as path:
             os.chdir(path)
             try:
                 value = func(*args, **kwargs)

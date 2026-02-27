@@ -8,8 +8,8 @@ from pesummary.gw.conversions import convert
 
 from dtempest.core.plot_utils import set_corner_limits, redraw_legend
 from dtempest.gw.catalog import Merger
-from dtempest.gw.utils import plot_image
-from dtempest.gw.utils import prepare_array
+from dtempest.gw import plot_image
+from dtempest.gw import prepare_array
 from dtempest.gw.sample_utils import CBCSampleDict, CBCComparisonSampleDict
 
 

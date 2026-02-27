@@ -6,7 +6,7 @@ Noise samples for PSD estimations
 
 from pathlib import Path
 
-from dtempest.gw.utils import query_noise
+from dtempest.gw import query_noise
 
 if __name__ == '__main__':
     times = [ 	1268431194.1]  # or the preferred times

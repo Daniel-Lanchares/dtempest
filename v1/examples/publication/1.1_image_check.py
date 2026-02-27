@@ -8,7 +8,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 
 from dtempest.core.train_utils import H5Dataset
-from dtempest.gw.utils import plot_image
+from dtempest.gw import plot_image
 
 imgs_per_seed = 1000 * 1000
 valid_fraction = 0.1 # So 10% validation

@@ -4,7 +4,7 @@ from pathlib import Path
 
 from dtempest.gw import CBCEstimator
 from dtempest.gw.catalog import Merger
-from dtempest.gw.utils import prepare_array
+from dtempest.gw import prepare_array
 
 
 def sample_and_save(event: str,

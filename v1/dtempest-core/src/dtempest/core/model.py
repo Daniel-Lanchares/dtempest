@@ -5,6 +5,7 @@ Module containing the main class: Estimator
 import torch
 import numpy as np
 from pathlib import Path
+from copy import deepcopy
 from collections import OrderedDict
 from typing import Callable
 from typing_extensions import Self
@@ -83,7 +84,7 @@ class Estimator:
             'estimation_parameters': estimation_parameters,
 
             'net_config': net_config,
-            'flow_config': flow_config,
+            'flow_config': deepcopy(flow_config),
             'train_history': train_history,
 
             'mode': mode,
