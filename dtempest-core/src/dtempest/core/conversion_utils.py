@@ -1,14 +1,8 @@
 import matplotlib.pyplot as plt
-# from pprint import pprint
-from pathlib import Path
 import numpy as np
-# import pandas as pd
-
-import torch
 
 from .config import no_jargon
-from .common_utils import check_format, get_missing_args
-from .train_utils import TrainSet
+from .common_utils import get_missing_args
 
 '''
 In this file the raw dataset (list of dictionaries) is transformed
@@ -45,7 +39,7 @@ def make_array(data: dict, jargon: dict = None):
     Returns
     -------
 
-    """  # TODO: study n-channel cases
+    """
     if jargon is None:
         jargon = no_jargon
 
@@ -66,11 +60,11 @@ def extract_parameters(dataset, params_list, jargon: dict = None):
                            'To properly convert parameters a jargon["parameter_pool"] is required')
     param_pool = jargon['param_pool']
 
-    dataset = check_format(dataset)
+    # dataset = check_format(dataset)
 
     label_list = []
 
-    for index, inj in dataset.iterrows():  # TODO: multiprocessing
+    for index, inj in dataset.iterrows():
         params_dict = inj[jargon['parameters']]
 
         new_params_dict = {}
@@ -230,7 +224,7 @@ def plot_images(dataset,
     if fig is None:
         fig = plt.figure(figsize=figsize)
 
-    dataset = check_format(dataset)
+    # dataset = check_format(dataset)
     layout = index_array.shape
     flat_array = index_array.flatten()
     for i, indx in enumerate(flat_array):

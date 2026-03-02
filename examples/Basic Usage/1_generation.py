@@ -53,9 +53,9 @@ if __name__ == '__main__':
 
     # Each chunk of the dataset is generated with noise (ASD) from one of these times
     times = [
-        1240194342, 
+        1240194342,
         1249784742,
-        1267928742, 
+        1267928742,
         1268431194.1
         ] 
 

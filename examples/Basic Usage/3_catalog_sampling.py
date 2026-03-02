@@ -37,15 +37,16 @@ def sample_catalog(
 
     for event in events:
 
-        if check_barred_events(name, exceptions):
+        if (outdir / "samples" / f"{event['name']}_{nsamples}.npz").exists():
+            print(f"\nSkipping event {event['name']} because it was already sampled.\n")
+            continue
+
+        elif check_barred_events(event["name"], exceptions):
             continue
         
         if len(event["name"].split("_")) == 1:
             event["name"] = event["shortName"].split("-")[0]
-        
-        if (outdir / "samples" / f"{event['name']}_{nsamples}.npz").exists():
-            print(f"\nSkipping event {event['name']} because it was already sampled.\n")
-            continue
+
 
         print(f"\nSampling event {event['name']}.\n")
         sample_and_save(event["name"], model, outdir, nsamples, **gwosc_kwargs)
@@ -56,8 +57,6 @@ if __name__ == '__main__':
     Sampling from trained model over an entire catalog (minus exceptions).
     """
     name = 'GP15_example' # Model name
-    catalog = "GWTC-2.1-confident"
-    # catalog = "GWTC-3-confident"
 
     files_dir = Path('') # Main directory
     train_dir = files_dir / 'Model'
@@ -82,4 +81,5 @@ if __name__ == '__main__':
 
     directory = files_dir / "Estimation Data" / flow.name
 
-    sample_catalog(catalog, flow, directory, exceptions=exceptions)
+    sample_catalog("GWTC-2.1-confident", flow, directory, exceptions=exceptions)
+    sample_catalog("GWTC-3-confident", flow, directory, exceptions=exceptions)

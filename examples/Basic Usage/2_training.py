@@ -36,6 +36,7 @@ if __name__ == '__main__':
     valid_fraction = 0.1 # So 10% validation
 
     dataset_name = f'Data15_{int(imgs_per_seed/1e6)}M_{int(valid_fraction*100)}%.h5'
+    # dataset_name = f'Data15_{int(1)}k_{int(valid_fraction * 100)}%.h5' # Test dataset
     with h5py.File(rawdat_dir / dataset_name, 'r') as h_file:
         dataset_metadata = get_metadata(h_file)
         dataset_metadata.update({'name': dataset_name})
@@ -63,7 +64,7 @@ if __name__ == '__main__':
         'learning_rate': 5e-5,  # 5e-5,
         
         'loader_kwargs': {
-            'batch_size': 2048, #1750,  # 2048 fills gpu
+            'batch_size': 2048,
             'num_workers': 4,
             "collate_fn": h5_collate_fn,
             "pin_memory": True
