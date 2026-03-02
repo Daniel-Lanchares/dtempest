@@ -250,8 +250,11 @@ class Estimator:
                 data[key[0]][key[1]] = 'Not shown'
         pprint(data)
     
-    def get_dataset_metadata(self, stage: int = 0):
-        return deepcopy(self.metadata["train_history"][f"stage {stage}"]["dataset_info"])
+    def get_dataset_metadata(self, stage: int = 0, _deepcopy: bool = True):
+        if _deepcopy:
+            return deepcopy(self.metadata["train_history"][f"stage {stage}"]["dataset_info"])
+        else:
+            return self.metadata["train_history"][f"stage {stage}"]["dataset_info"]
 
     def turn_net_grad(self, code: str | bool):
         if code == 'on':

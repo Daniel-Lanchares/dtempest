@@ -84,7 +84,18 @@ def format_timedelta(td):
     else:
         return f"{hours:02}:{minutes:02}:{seconds:02}"
 
-def getsnr(ifos):
+def get_metadata(file):
+    # https://stackoverflow.com/questions/16547643/convert-a-list-of-delimited-strings-to-a-tree-nested-dict-using-python
+    metadata = {}
+    for keys, val in file.attrs.items():
+        t = metadata
+        parts = keys.split("/")
+        for part in parts[:-1]:
+            t = t.setdefault(part, {})
+        t[parts[-1]] = val
+    return metadata
+
+def get_snr(ifos):
     """Calculates the signal-to-noise ratio (SNR) of the injected signal in two interferometers.
 
     Args:

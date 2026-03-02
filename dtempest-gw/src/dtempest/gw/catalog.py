@@ -1,6 +1,7 @@
 """This module adds catalog related functionality to test models on real data"""
 import h5py
 import numpy as np
+from collections.abc import Callable, Iterable
 
 from gwosc.api.v2 import fetch_event_version
 from gwpy.timeseries import TimeSeries
@@ -14,6 +15,20 @@ full_names = {
     'GW190521': 'GW190521_030229',
     'GW190814': 'GW190814_211039'
 }
+
+EventNames = Iterable[str]
+Message = Callable[[str], str]
+BarredEventDict = dict[EventNames, Message]
+
+def check_barred_events(name: str, exceptions: BarredEventDict = None) -> bool:
+    if exceptions is None:
+        exceptions = {}
+    for barred_events, message in exceptions.items():
+        if name in barred_events:
+            print(message(name))
+            return True
+    else:
+        return False
 
 def fetch_ifo_data(ifo, start, duration, buffer_time, **kwargs) -> TimeSeries:
         end = start + duration + buffer_time

@@ -9,7 +9,7 @@ from joblib import Parallel, delayed
 import bilby
 from bilby.core.prior import PriorDict
 
-from .utils import set_metadata, fill_hdf5, format_timedelta, ifo_q_transform, setup_ifos, getsnr
+from .utils import set_metadata, fill_hdf5, format_timedelta, ifo_q_transform, setup_ifos, get_snr
 
 def make_dataset(filepath: Path = Path('Dataset.h5'),
                 n_images: int = 1,
@@ -165,7 +165,7 @@ def generate_timeseries(prior_dict,
         ifos.inject_signal(samples, waveform_generator=waveform_generator)
 
         # Check if the SNR of the injected signal is close to the target SNR.
-        snr = getsnr(ifos)
+        snr = get_snr(ifos)
         if snr_range[0] < snr < snr_range[1] or counter == max_iter:
 
             if counter == max_iter:
