@@ -21,6 +21,7 @@ Message = Callable[[str], str]
 BarredEventDict = dict[EventNames, Message]
 
 def check_barred_events(name: str, exceptions: BarredEventDict = None) -> bool:
+    """Checks for barred events, printing a message based on the exceptions dict"""
     if exceptions is None:
         exceptions = {}
     for barred_events, message in exceptions.items():
@@ -31,9 +32,10 @@ def check_barred_events(name: str, exceptions: BarredEventDict = None) -> bool:
         return False
 
 def fetch_ifo_data(ifo, start, duration, buffer_time, **kwargs) -> TimeSeries:
-        end = start + duration + buffer_time
-        start -= buffer_time
-        return TimeSeries.fetch_open_data(ifo, start, end, **kwargs)
+    """Thin wrapper around the gwpy.timeseries.TimeSeries.fetch_open_data to suit our needs"""
+    end = start + duration + buffer_time
+    start -= buffer_time
+    return TimeSeries.fetch_open_data(ifo, start, end, **kwargs)
 
 class Event:
     def __init__(self,
@@ -48,8 +50,23 @@ class Event:
                 version: str =None,
                 **unused_kwargs
                 ):
+        """
+        Real life event recorded in a catalog
+
+        Parameters
+        ----------
+        name : name of the event
+        duration : duration of the data to fetch
+        img_res : resolution of the resulting image
+        sampling_frequency : sampling frequency of the data
+        qtrans_kwargs : kwargs for the QTransform
+        ifolist : list of interferometers
+        catalog : catalog to search in
+        version : version of the catalog to use
+        unused_kwargs : allows the user to fetch an event by unpacking metadata dictionaries without KeyErrors
+        """
         
-        # Type conversions avoid memory segmentation issues (Fuckin' C, man...)
+        # Type conversions avoid memory segmentation issues (C doing C things)
         self.duration = float(duration)
         self.image_window = tuple(qtrans_kwargs.pop("outseg"))
         self.img_res = tuple(img_res)
@@ -81,8 +98,17 @@ class Event:
 
 class Injection:
     def __init__(self, n, dataset_path, kind):
+        """
+        Injection class with similar behaviour to Event
+
+        Parameters
+        ----------
+        n : number of the injection within the dataset
+        dataset_path : path to the dataset
+        kind : type of dataset (mainly training/validation)
+        """
         self.dataset_path = dataset_path
         self.kind = kind
         self.n = n
-        with h5py.File(self.file_path, 'r') as h_file:
+        with h5py.File(self.dataset_path, 'r') as h_file:
             self.data, self.labels = h_file[self.kind]['images'][self.n], h_file[self.kind]['labels'][self.n]

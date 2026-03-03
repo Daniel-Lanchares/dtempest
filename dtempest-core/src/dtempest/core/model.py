@@ -20,7 +20,30 @@ class_dict = {
 
 
 class Estimator:
+    """
+    Main class of the library. Holds the model and can train and sample.
 
+    Parameters
+    ----------
+    param_list:
+        Iterable of parameters to study.
+    flow_config:
+        Configuration dict for normalizing flow.
+    net_config:
+        Configuration dict for neural network.
+    workdir:
+        Path to the directory that will hold sample_related files.
+    mode:
+        String to interpret desired architecture ('net+flow', 'extractor (pretrained net)+flow' or just 'flow').
+    preprocess:
+        preprocess function for the data. It's stored as metadata and can be easily accessed.
+        Context is preprocessed under the hood, but can still be done explicitly by the user
+        (see preprocess method).
+    device:
+        Device in which to put the model (cpu/cuda).
+    jargon:
+        A dict that contains various task-specific info to be defined in each package.
+    """
     def __init__(self,
                  param_list: list | np.ndarray | torch.Tensor,
                  flow_config: dict,
@@ -33,32 +56,6 @@ class Estimator:
                  preprocess: Callable = None,
                  jargon: dict = no_jargon
                  ):
-        """
-        Main class of the library. Holds the model and can train and sample
-
-        Parameters
-        ====#====
-        param_list:
-            Iterable of parameters to study
-        flow_config:
-            Configuration dict for normalizing flow
-        net_config:
-            Configuration dict for neural network
-        train_config: DEPRECATED
-            Configuration dict for training process
-        workdir:
-            Path to the directory that will hold sample_related files
-        mode:
-            String to interpret desired architecture ('net+flow', 'extractor (pretrained net)+flow' or just 'flow')
-        preprocess:
-            preprocess function for the data. It's stored as metadata and can be easily accessed.
-            Context is preprocessed under the hood, but can still be done explicitly by the user
-            (see preprocess method).
-        device:
-            Device in which to put the model (cpu/cuda).
-        jargon:
-            A dict that contains various task-specific info to be defined in each package.
-        """
 
         if train_history is None:
             train_history = OrderedDict()
@@ -326,16 +323,23 @@ class Estimator:
 
         Parameters
         ----------
-        trainset : dataset for training
-        traindir : train directory
-        train_config : configuration of the training stage
-        validation : dateset for validation
-        save_loss : whether to save the loss data on a file or not
-        make_plot : whether to make a preliminary loss plot or not
+        trainset :
+            dataset for training.
+        traindir :
+            train directory.
+        train_config :
+            configuration of the training stage.
+        validation :
+            dateset for validation.
+        save_loss :
+            whether to save the loss data on a file or not.
+        make_plot :
+            whether to make a preliminary loss plot or not.
 
         Returns
         -------
-        Epoch and loss information for provided datasets
+        tuple[np.ndarray, np.ndarray] | tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
+            Epoch and loss information for provided datasets
 
         """
         import time

@@ -71,17 +71,21 @@ def get_missing_args(type_excep: TypeError):
 
 def calc_parameter(param: str, pool: Pool_map, params_dict):
     """
-    Recursively calculates a given parameter from a pool of conversion functions
+    Recursively calculates a given parameter from a pool of conversion functions.
 
     Parameters
     ----------
-    param : name of the parameter to calculate
-    pool : mapping of conversion functions to draw from for calculation
-    params_dict : mapping of parameters at our disposal.
+    param :
+        Name of the parameter to calculate.
+    pool :
+        Mapping of conversion functions to draw from for calculation.
+    params_dict :
+        Mapping of parameters at our disposal.
 
     Returns
     -------
-    Requested parameter
+    parameter :
+        Requested parameter
 
     """
     try:

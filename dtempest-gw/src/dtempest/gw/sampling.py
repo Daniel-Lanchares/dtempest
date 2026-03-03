@@ -7,7 +7,7 @@ from dtempest.core._pesum_deps.samples_dict import MultiAnalysisSamplesDict
 from dtempest.core.sampling import SampleDict, ComparisonSampleDict
 from .config import cbc_jargon
 
-
+"""Sample containers with gw-oriented plotting routines"""
 
 class CBCSampleDict(SampleDict):
     __init__ = partialmethod(SampleDict.__init__,
@@ -242,9 +242,9 @@ class CBCComparisonSampleDict(ComparisonSampleDict):  # Subclassing two classes 
         ----------
         labels: list, optional
             list of analyses that you wish to save to file. Default save all
-            analyses to file
+            analyses to file.
         **kwargs: dict, optional
-            all additional kwargs passed to the pesummary.io.write function
+            all additional kwargs passed to the pesummary.io.write function.
         """
         if labels is None:
             labels = self.labels
@@ -304,6 +304,7 @@ class CBCComparisonSampleDict(ComparisonSampleDict):  # Subclassing two classes 
 
 
 def _default_bounds(samples, parameters, comparison=False):
+    """Thin wrapper around pesummary's _return_bounds for our classes"""
     from pesummary.gw.plots.plot import _return_bounds
     from collections import OrderedDict
     bounds = OrderedDict()
@@ -318,11 +319,15 @@ def nan_check(vector, f_type: str = 'max'):
 
     Parameters
     ----------
-    vector : list of values to filter
-    f_type : take minimum or maximum
+    vector :
+        List of values to filter.
+    f_type :
+        Take minimum or maximum.
 
-    Returns Max/min of list, or None if not available
+    Returns
     -------
+    extreme : np.float64
+        Max/min of list, or None if not available
 
     """
     mapping = {'min': np.nanmin, 'max': np.nanmax}

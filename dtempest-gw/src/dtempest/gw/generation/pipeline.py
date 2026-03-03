@@ -23,7 +23,40 @@ def make_dataset(filepath: Path = Path('Dataset.h5'),
                 image_compression="gzip",
                 joblib_kwargs: dict = None,
                 asd_dict=None,
-                **injection_kwargs):
+                **injection_kwargs) -> None:
+    """
+    Dataset generating function.
+
+    Parameters
+    ----------
+    filepath :
+        path of the created h5 file.
+    n_images :
+        number of images.
+    n_batches :
+        number of batches. Will not affect outcome.
+    valid_fraction :
+        fraction of data (0-1) to dedicate to validation.
+    parameters :
+        labels of the images.
+    prior :
+        prior (bilby compatible) to draw samples from.
+    snr_range :
+        range of aceptable SNR values.
+    seed :
+        seed for reproducibility.
+    image_dtype :
+        large datasets benefit from being stored in 16 bytes as opposed to 32.
+    image_compression :
+        compression for further reduced footprint.
+    joblib_kwargs :
+        multiprocessing configuration.
+    asd_dict :
+        dict of ASDs to draw noise samples from.
+    injection_kwargs :
+        configuration for the injection of data.
+
+    """
     assert n_batches <= n_images, f"You need more images ({n_images}) than batches ({n_batches})"
     len_batch, rest = divmod(n_images, n_batches)
 
@@ -63,7 +96,7 @@ def make_dataset(filepath: Path = Path('Dataset.h5'),
         for s, leng in zip(datasets, lengths):
             h_file.create_dataset(f'{s}/images',
                                   compression=image_compression,
-                                  shape=(leng, 3, *resol),  # TODO DO NOT HARDCODE CHANNELS
+                                  shape=(leng, 3, *resol),  # With current methodology, channels have to be hardcoded in the resnet
                                   dtype=image_dtype,
                                   )
             h_file.create_dataset(f'{s}/labels',

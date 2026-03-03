@@ -36,17 +36,16 @@ class PrintStyle:
 
 def change_legend_loc(artist, loc: str | int, pos: int = 0) -> None:
     """
-    Changes location of a pyplot legend.
+    Changes location of a pyplot legend. Unlike redraw_legend, it is non-destructive.
 
     Parameters
     ----------
-    artist : holder of the legend
-    loc : new position
-    pos : if there al multiple legends, specify position on list
-
-    Unlike redraw_legend, it is non-destructive
-    -------
-
+    artist :
+        holder of the legend.
+    loc :
+        new position.
+    pos :
+        if there al multiple legends, specify position on list.
     """
     if isinstance(artist, plt.Axes):
         legend = artist.get_legend()
@@ -69,18 +68,18 @@ def change_legend_loc(artist, loc: str | int, pos: int = 0) -> None:
 
 def redraw_legend(artist, *args, pos: int = 0, **kwargs) -> None:
     """
-    Redraws a pyplot legend
+    Redraws a pyplot legend.
 
     Parameters
     ----------
-    artist : holder of the legend
-    args : new arguments for the legend
-    pos : if there al multiple legends, specify position on list
-    kwargs : new keyword arguments for the legend
-
-    Returns
-    -------
-
+    artist :
+        holder of the legend.
+    args :
+        new arguments for the legend.
+    pos :
+        if there al multiple legends, specify position on list.
+    kwargs :
+        new keyword arguments for the legend.
     """
     from matplotlib.legend import Legend
     if isinstance(artist, plt.Axes):
@@ -114,11 +113,13 @@ def get_extractor(name):
 
     Parameters
     ----------
-    name : Model code with no symbols or uppercase (e.g. resnet18 for ResNet-18)
+    name :
+        Model code with no symbols or uppercase (e.g. resnet18 for ResNet-18).
 
     Returns
     -------
-    the model, the pre-trained weights and the preprocessing pipeline.
+    model, weights, pre_process
+        The model, the pre-trained weights and the preprocessing pipeline.
 
     """
     import torchvision.models as models
@@ -137,15 +138,17 @@ models_dict = {
 
 def process_loss(arr: np.ndarray, points: int = None) -> np.ndarray:
     """
-
     Parameters
     ----------
-    arr : loss array
-    points : number of points of the averaged loss. Currently, supports 1 or number of epochs
+    arr :
+        Loss array.
+    points :
+        Number of points of the averaged loss. Currently, supports 1 or number of epochs.
 
     Returns
     -------
-    Averaged loss array
+    loss array
+        Averaged loss array.
 
     """
     if points is None:
@@ -158,14 +161,17 @@ def process_loss(arr: np.ndarray, points: int = None) -> np.ndarray:
 
 def process_epochs(arr: np.ndarray, points: int = None) -> np.ndarray:
     """
-
     Parameters
     ----------
-    arr : epochs array
-    points : number of points to average over
+    arr :
+        Epochs array.
+    points :
+        Number of points to average over.
 
     Returns
     -------
+    epochs array
+        Selected epochs.
 
     """
     if points is None:
@@ -180,13 +186,17 @@ def get_loss(path: Path, points: int = None, validation: bool = False,):
 
     Parameters
     ----------
-    path : path to loss file
-    points : points to average over. Currently, supports 1 or number of epochs
-    validation
+    path :
+        path to loss file.
+    points :
+        points to average over. Currently, supports 1 or number of epochs.
+    validation: bool
+        Whether it is validation loss.
 
     Returns
     -------
-    Epochs and average loss arrays
+    data
+        Epochs and average loss arrays.
 
     """
     if validation:

@@ -18,10 +18,22 @@ loss_dict = {'MSE': nn.MSELoss, 'CE': nn.CrossEntropyLoss}
 
 class H5Dataset(torch.utils.data.Dataset):
     """
+    HDF5 based dataset for RAM efficiency.
+
+    Parameters
+    ----------
+    path : str | Path
+        Filepath of the dataset.
+    kind : str
+        Training or validation.
+    name:
+        Name of the dataset.
+
+    References
+    ---------
     Adapted from:
     https://discuss.pytorch.org/t/dataloader-when-num-worker-0-there-is-bug/25643/16?fbclid=IwAR2jFrRkKXv4PL9urrZeiHT_a3eEn7eZDWjUaQ-zcLP6BRtMO7e0nMgwlKU
 
-    HDF5 based dataset for RAM efficiency
     """
     
     def __init__(self, path, kind: str = 'training', name=None):

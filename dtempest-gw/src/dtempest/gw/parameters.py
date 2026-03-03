@@ -1,6 +1,8 @@
 import numpy as np
 
-# Parameter redefinitions.
+"""
+Parameter redefinitions for label conversion. 
+"""
 # kwargs is used because we will input all base parameters to all functions
 
 

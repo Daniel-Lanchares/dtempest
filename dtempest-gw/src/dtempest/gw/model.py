@@ -5,10 +5,13 @@ from dtempest.core import Estimator
 from .config import cbc_jargon
 from .sampling import CBCSampleDict
 
+"""
+Model for Compact Binary Coalescence Estimations
+"""
+
 class_dict = {
     'sample_dict': CBCSampleDict,
 }
-
 
 class CBCEstimator(Estimator):
 

@@ -220,14 +220,17 @@ class ComparisonSampleDict(MultiAnalysisSamplesDict):
     def get_given_analysis(self, analysis: str | list[str] = 'all'):
         """
 
-        Handles samples requests from other methods
+        Handles samples requests from other methods.
 
         Parameters
         ----------
-        analysis : The requested samples
+        analysis :
+            The requested samples.
 
-        Returns The analysis that match the request
+        Returns
         -------
+        analysis:
+            The analysis that match the request
 
         """
         if analysis == "all":
@@ -254,11 +257,15 @@ class ComparisonSampleDict(MultiAnalysisSamplesDict):
 
         Parameters
         ----------
-        parameters : The requested parameters
-        analysis : The requested samples
+        parameters :
+            The requested parameters.
+        analysis :
+            The requested samples.
 
-        Returns All parameters requested that are contained in all the specified analysis
+        Returns
         -------
+        params
+            All parameters requested that are contained in all the specified analysis
 
         """
 
