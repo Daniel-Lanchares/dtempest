@@ -1,20 +1,15 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .config import no_jargon
-from .common_utils import get_missing_args
+from .config import no_jargon, Pool_map
 
 '''
-In this file the raw dataset (list of dictionaries) is transformed
-into a dataset compatible with PyTorch [[image0, labels0], ...]
-
-Here regression parameters are also chosen 
+Utilities related to conversion between parameters and data structures.
 '''
 
 def make_image(data: dict | np.ndarray, jargon: dict = None):
     """
-    Creates image array (compatible with plt.imshow()) 
-    from injection's dictionary
+    Creates image array (compatible with plt.imshow()) from data.
     """
     if jargon is None:
         jargon = no_jargon
@@ -30,15 +25,7 @@ def make_image(data: dict | np.ndarray, jargon: dict = None):
 
 def make_array(data: dict, jargon: dict = None):
     """
-    Creates array apt to be fed to models
-    Parameters
-    ----------
-    data : 
-    jargon : 
-
-    Returns
-    -------
-
+    Creates array apt to be fed to model's parameters.
     """
     if jargon is None:
         jargon = no_jargon
@@ -52,15 +39,12 @@ def make_array(data: dict, jargon: dict = None):
 
 def extract_parameters(dataset, params_list, jargon: dict = None):
     """
-    Extracts an array of specified parameters
-    from a dataset (or its path).
+    Extracts an array of specified parameters from a dataset.
     """
     if jargon is None:
         raise RuntimeError('You have no jargon defined: '
                            'To properly convert parameters a jargon["parameter_pool"] is required')
     param_pool = jargon['param_pool']
-
-    # dataset = check_format(dataset)
 
     label_list = []
 
@@ -79,10 +63,32 @@ def extract_parameters(dataset, params_list, jargon: dict = None):
         label_list.append(np.array(labels))
     return np.array(label_list)
 
-def calc_parameter(param, pool, params_dict):
+def get_missing_args(type_excep: TypeError):
+    """Extract missing parameters on a caught type-related exception."""
+    crumbs = type_excep.args[0].split(' ')
+    n_args = int(crumbs[2])
+    return [crumbs[-2 * i + 1][1:-1] for i in reversed(range(1, n_args + 1))]
+
+def calc_parameter(param: str, pool: Pool_map, params_dict):
+    """
+    Recursively calculates a given parameter from a pool of conversion functions
+
+    Parameters
+    ----------
+    param : name of the parameter to calculate
+    pool : mapping of conversion functions to draw from for calculation
+    params_dict : mapping of parameters at our disposal.
+
+    Returns
+    -------
+    Requested parameter
+
+    """
     try:
         return pool[param](**params_dict)
     except TypeError as error:
+        # If some of the required parameters are missing, it throws a TypeError we can inspect
+        # and recursively calculate the missing arguments of pool[param].
         missing_args = get_missing_args(error)
         missing_dict = {arg: calc_parameter(arg, pool, params_dict) for arg in missing_args}
         return pool[param](**missing_dict, **params_dict)
@@ -140,8 +146,8 @@ def plot_image(data, fig=None, figsize=None, title_maker=None, jargon: dict = No
 
         Parameters
         ----------
-        data : dict
-            element of the Raw_dataset.
+        data : np.array
+            element of the Dataset.
         fig : matplotlib.pyplot.figure, optional
             Matplotlib.pyplot figure to be plotted on. Especially useful to paint
             various plots manually. The default is None.
@@ -182,53 +188,4 @@ def plot_image(data, fig=None, figsize=None, title_maker=None, jargon: dict = No
             pass
     else:
         ax.set_title(title_maker(data), **title_kwargs)
-    return fig
-
-
-def plot_images(dataset,
-                index_array: np.ndarray,
-                fig=None,
-                figsize=None,
-                title_maker=None,
-                jargon: dict = None,
-                *imshow_args, **imshow_kwargs):
-    """
-        Plots histograms of the given parameter array on one or more subplots
-
-        Parameters
-        ----------
-        dataset : TYPE
-            Raw_dataset.
-        index_array : np.ndarray
-            Array of indexes of the dataset to plot. Dictates figure layout
-        fig : matplotlib.pyplot.figure, optional
-            Matplotlib.pyplot figure to be plotted on. Especially useful to paint
-            various plots manually. The default is None.
-        figsize : tuple, optional
-            'figsize' parameter for fig. The default is None.
-        title_maker : callable, optional
-            funtion to return image_title base on injection. The default is None.
-        *imshow_args : iterable
-            Arguments to be passed to plt.imshow().
-        **imshow_kwargs : dict
-            Keyword arguments to be passed to plt.imshow().
-
-        Returns
-        -------
-        fig : matplotlib.pyplot.figure
-            updated figure with the images now plotted.
-
-        """
-    # Study way of having different args and kwargs for each hist
-
-    if fig is None:
-        fig = plt.figure(figsize=figsize)
-
-    # dataset = check_format(dataset)
-    layout = index_array.shape
-    flat_array = index_array.flatten()
-    for i, indx in enumerate(flat_array):
-        fig = plot_image(dataset[indx], fig=fig, figsize=figsize, title_maker=title_maker, jargon=jargon,
-                         plot_layout=(*layout, i + 1), *imshow_args, **imshow_kwargs)
-    plt.tight_layout()
     return fig

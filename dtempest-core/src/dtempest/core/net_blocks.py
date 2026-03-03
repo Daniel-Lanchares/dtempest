@@ -2,7 +2,9 @@
 """
 Created on Tue Aug  1 11:54:41 2023
 
-@author: danie
+@author: Daniel Lanchares
+
+Utilities for building custom networks
 """
 
 import torch.nn as nn

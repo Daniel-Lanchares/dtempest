@@ -1,13 +1,11 @@
-import os
 import torch
 import numpy as np
-import pandas as pd
 from pathlib import Path
-from multiprocessing import Pool
-from cycler import cycler
 import matplotlib.pyplot as plt
-from collections import OrderedDict
 
+"""
+Various useful functions, maily loss and drawing related.
+"""
 
 # Look for more colors just in case
 class PrintStyle:
@@ -36,31 +34,9 @@ class PrintStyle:
     invisible = '\033[08m'
 
 
-class Pallete:
-
-    def __init__(self, n: int = 10, cmap: str = 'jet'):
-        self.cycler = colour_cycler(n, cmap)
-
-    def colour(self):
-        return next(self.cycler())
-
-    def colours(self):
-        return self.cycler
-
-    # def merge(self, other):
-    #     ex = []
-    #     for b, o in blues, oranges:
-    #         ex.append(b)
-    #         ex.append(o)
-    #     cyc = cycle
-
-
-def colour_cycler(n: int = 10, cmap: str = 'jet'):
-    return cycler('color', [plt.get_cmap(cmap)(1. * i / n) for i in range(1, n)])
-
-
-def change_legend_loc(artist, loc: str | int, pos: int = 0):
+def change_legend_loc(artist, loc: str | int, pos: int = 0) -> None:
     """
+    Changes location of a pyplot legend.
 
     Parameters
     ----------
@@ -91,21 +67,28 @@ def change_legend_loc(artist, loc: str | int, pos: int = 0):
         raise ValueError(f"Paramemer loc can only be of class 'int' or 'str', not '{type(loc)}'")
 
 
-def redraw_legend(artist, *args, pos: int = 0, **kwargs):
+def redraw_legend(artist, *args, pos: int = 0, **kwargs) -> None:
+    """
+    Redraws a pyplot legend
+
+    Parameters
+    ----------
+    artist : holder of the legend
+    args : new arguments for the legend
+    pos : if there al multiple legends, specify position on list
+    kwargs : new keyword arguments for the legend
+
+    Returns
+    -------
+
+    """
     from matplotlib.legend import Legend
-    # from matplotlib.font_manager import FontProperties
-    # from matplotlib.legend import legend_handler
     if isinstance(artist, plt.Axes):
         l: Legend = artist.get_legend()
     elif isinstance(artist, plt.Figure):
         l: Legend = artist.legends[pos]  # A figure can have multiple legends
     else:
         raise NotImplementedError(f"Change of legend location is not implemented for objects of type '{type(artist)}'")
-    # l.prop = FontProperties(size=fontsize)
-    # l._fontsize = l.prop.get_size_in_points()
-    # for text in l.texts:
-    #     text.set_fontsize(fontsize)
-    # texts = [text.get_text() for text in l.texts]
     handles = l.legend_handles
 
     linewidth = kwargs.pop('linewidth', None)
@@ -119,17 +102,25 @@ def redraw_legend(artist, *args, pos: int = 0, **kwargs):
 
 
 def identity(x):
+    """
+    Convenience functions that returns the argument it is passed
+    """
     return x
 
 
-def get_missing_args(type_excep):
-    crumbs = type_excep.args[0].split(' ')
-    n_args = int(crumbs[2])
-
-    return [crumbs[-2 * i + 1][1:-1] for i in reversed(range(1, n_args + 1))]
-
-
 def get_extractor(name):
+    """
+    Obtain specific extractor with its weights and preprocessing function.
+
+    Parameters
+    ----------
+    name : Model code with no symbols or uppercase (e.g. resnet18 for ResNet-18)
+
+    Returns
+    -------
+    the model, the pre-trained weights and the preprocessing pipeline.
+
+    """
     import torchvision.models as models
     model = getattr(models, name)
     weights = getattr(getattr(models, f'{models_dict[name]}_Weights'), 'DEFAULT')
@@ -139,68 +130,67 @@ def get_extractor(name):
 
 
 models_dict = {
-    'resnet18': 'ResNet18'
+    'resnet18': 'ResNet18',
+    'resnet50': 'ResNet50'
 }
 
 
-def load_losses(directory: str | Path,
-                model: str = None,
-                stages: int | list[int] = None,
-                validation: bool = False,
-                verbose: bool = True) -> tuple[dict, dict] | tuple[dict, dict, dict, dict]:
-    subdirs = [f.name for f in os.scandir(directory) if f.is_dir()]
-    if stages is None:
-        chosen_subs = {int(subdir.split('_')[-1]): subdir for subdir in subdirs}
+def process_loss(arr: np.ndarray, points: int = None) -> np.ndarray:
+    """
+
+    Parameters
+    ----------
+    arr : loss array
+    points : number of points of the averaged loss. Currently, supports 1 or number of epochs
+
+    Returns
+    -------
+    Averaged loss array
+
+    """
+    if points is None:
+        return arr.flatten()
+    elif points == arr.shape[0]:
+        return np.mean(arr, axis=1)
     else:
-        if not hasattr(stages, '__iter__'):
-            stages = [stages, ]
-        chosen_subs = {int(subdir.split('_')[-1]): subdir for subdir in subdirs  # add '#' to ignore directory
-                       if int(subdir.split('_')[-1]) in stages and subdir.split('_')[0] != '#'}
+        raise NotImplementedError("Only per-epoch averages are supported")
 
-    if model is not None:
-        chosen_subs = {stage: subdir for stage, subdir in chosen_subs.items() if subdir.split('_')[-3] == model}
 
-    # Sort the stages to avoid issues down the line
-    chosen_subs = {stage: chosen_subs[stage] for stage in sorted(chosen_subs.keys())}
+def process_epochs(arr: np.ndarray, points: int = None) -> np.ndarray:
+    """
 
-    epochs = {}
-    losses = {}
-    vali_epochs = {}
-    validations = {}
-    last_epoch = 0  # Should never be needed, but suppresses static warning
-    for i, (stage, sub) in enumerate(chosen_subs.items()):
-        epoch, loss = torch.load(Path(directory) / sub / 'loss_data.pt')
+    Parameters
+    ----------
+    arr : epochs array
+    points : number of points to average over
 
-        if len(epoch.shape) == 1:  # To deal with legacy loss format
-            nepochs = int(epoch[-1]) + 1
-            epoch = epoch.reshape((nepochs, -1))
-            loss = loss.reshape((nepochs, -1))
+    Returns
+    -------
 
-        if i == 0:
-            epochs[stage] = epoch
+    """
+    if points is None:
+        return arr.flatten()
+    elif points == arr.shape[0]:
+        return arr[:, -1]
+    else:
+        return arr.flatten()[0::len(arr.flatten())//points]
 
-        else:
-            epochs[stage] = epoch + last_epoch * np.ones_like(epoch)
+def get_loss(path: Path, points: int = None, validation: bool = False,):
+    """
 
-        losses[stage] = loss
-        if validation:
-            try:
-                vali_epoch, valid = torch.load(Path(directory) / sub / 'validation_data.pt')
-                if len(vali_epoch.shape) == 1:
-                    nepochs = int(vali_epoch[-1]) + 1
-                    vali_epoch = vali_epoch.reshape((nepochs, -1))
-                    valid = valid.reshape((nepochs, -1))
-                if i == 0:
-                    vali_epochs[stage] = vali_epoch
-                else:
-                    vali_epochs[stage] = vali_epoch + last_epoch * np.ones_like(vali_epoch)
-                validations[stage] = valid
-            except FileNotFoundError as exc:
-                print(f'Validation not found in {sub}')
-                print(exc)
-        if verbose:
-            print(f'Loaded {sub}')
-        last_epoch = epochs[stage].flatten()[-1]
+    Parameters
+    ----------
+    path : path to loss file
+    points : points to average over. Currently, supports 1 or number of epochs
+    validation
+
+    Returns
+    -------
+    Epochs and average loss arrays
+
+    """
     if validation:
-        return epochs, losses, vali_epochs, validations
-    return epochs, losses
+        epochs, loss = torch.load(path/'validation_data.pt', weights_only=False)
+    else:
+        epochs, loss = torch.load(path/'loss_data.pt', weights_only=False)
+    return process_epochs(epochs, points), process_loss(loss, points)

@@ -14,7 +14,7 @@ average_dict = {
 }
 
 
-class SampleDict(SamplesDict):  # TODO: load_from_file/write for core classes. Consider h5py?
+class SampleDict(SamplesDict):
 
     def __init__(self, parameters, name: str = None, jargon: dict = no_jargon):
         super().__init__({param: 0 for param in parameters}, jargon=jargon)
@@ -29,6 +29,7 @@ class SampleDict(SamplesDict):  # TODO: load_from_file/write for core classes. C
 
     @property
     def truth(self):
+        """Truth values for data where it is known (e.g. synthetic injections in noise)"""
         return self._truth
 
     @truth.setter
@@ -68,6 +69,7 @@ class SampleDict(SamplesDict):  # TODO: load_from_file/write for core classes. C
 
     @classmethod
     def from_file(cls, filepath):
+        """Loading should be handled by its parent class"""
         raise NotImplementedError
 
     @classmethod
@@ -76,6 +78,9 @@ class SampleDict(SamplesDict):  # TODO: load_from_file/write for core classes. C
         for param in sdict.parameters:
             sdict[param] = samplesdict[param]
         return sdict
+
+    def save_samples(self, filepath):
+        np.savez(filepath, **self)
 
 
     def get_one_dimensional_median_and_error_bar(self,
@@ -125,6 +130,7 @@ class SampleDict(SamplesDict):  # TODO: load_from_file/write for core classes. C
              type: str = 'marginalized_posterior',
              values: bool = True,
              truth_fmt: str = '.2f', **kwargs):
+        """Plotting map of its parent class with extra provisions for corner plots"""
         fig = super().plot(type=type, *args, **kwargs)
 
         if type == 'corner' and values:
@@ -205,6 +211,7 @@ def get_one_dimensional_median_and_error_bar(cls,
 class ComparisonSampleDict(MultiAnalysisSamplesDict):
     @property
     def unord_param_intersec(self):
+        # The parameters the various analysis have in common
         inter = frozenset(self.parameters[self.labels[0]])
         for params in self.parameters.values():
             inter &= frozenset(params)
@@ -279,6 +286,7 @@ class ComparisonSampleDict(MultiAnalysisSamplesDict):
         return params
 
     def get_median_data(self, parameters: list = None, analysis: str = 'all', as_dict: bool = False, **kwargs):
+        """Get median and credible intervals from all the analysis"""
 
         analysis = self.get_given_analysis(analysis)
         parameters = self.get_given_parameters(parameters, analysis)
@@ -306,6 +314,7 @@ class ComparisonSampleDict(MultiAnalysisSamplesDict):
              type: str = 'marginalized_posterior',
              medians: list | str = None,
              **kwargs):
+        """Plotting map of its parent class with extra provisions for corner plots"""
         fig = super().plot(type=type, *args, **kwargs)
 
         if type == 'corner' and medians is not None:
@@ -345,44 +354,3 @@ class ComparisonSampleDict(MultiAnalysisSamplesDict):
                 corner.overplot_points(fig, median_list[None], color=colors[n],
                                        marker=kwargs.get('median_marker', "s"))
         return fig
-
-
-# Could be moved to a config object later
-def set_hist_style(style: str = 'bilby') -> dict:
-    available_styles = ['bilby', ]
-    if style == 'bilby':
-        return {
-            # For plt.hist
-            'bins': 50,
-            'histtype': 'step',
-            'density': True,
-            'color': 'tab:blue',
-
-            # For various axvlines
-            'truth_color': 'orange',
-            'truth_format': '-',
-            'average_color': 'C0',
-            'average_format': '-',
-            'errorbar_color': 'C0',
-            'errorbar_format': '--'
-
-        }
-    elif style == 'deserted':
-        return {
-            # For plt.hist
-            'bins': 50,
-            'histtype': 'step',
-            'density': True,
-            'color': 'khaki',
-
-            # For various axvlines
-            'truth_color': 'orange',
-            'truth_format': '-',
-            'average_color': 'gold',
-            'average_format': '-',
-            'errorbar_color': 'gold',
-            'errorbar_format': '--'
-
-        }
-    else:
-        raise ValueError(f'style \'{style}\' not understood. This are the available styles: {available_styles}')

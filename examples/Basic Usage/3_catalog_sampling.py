@@ -19,7 +19,7 @@ def sample_and_save(event: str, model: CBCEstimator, outdir: Path = "", nsamples
     sample_dir.mkdir(parents=True, exist_ok=True)
 
     filepath = sample_dir / f'{event}_{nsamples}'
-    np.savez(filepath, **sdict)
+    sdict.save_samples(filepath)
     return filepath
 
 def sample_catalog(

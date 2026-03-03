@@ -6,7 +6,7 @@ from .net_blocks import ResNetBasicBlock
 from .common_utils import PrintStyle
 
 '''
-This function should create a XResNet (currently a normal ResNet)
+This function should create a ResNet
 
 Source for full resnet architecture: https://towardsdatascience.com/residual-network-implementing-resnet-a7da63c7b278
 Source for feature extractor: https://pytorch.org/tutorials/beginner/transfer_learning_tutorial.html
@@ -14,6 +14,7 @@ Source for feature extractor: https://pytorch.org/tutorials/beginner/transfer_le
 
 
 def create_feature_extractor(n_features, base_net=models.resnet18(weights=models.ResNet18_Weights.DEFAULT)):
+    """Return a pretrained ResNet feature extractor"""
     for param in base_net.parameters():
         param.requires_grad = False
 

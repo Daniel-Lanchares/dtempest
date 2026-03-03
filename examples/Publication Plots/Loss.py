@@ -1,35 +1,14 @@
-import torch
 import numpy as np
 from pathlib import Path
 import matplotlib.pyplot as plt
 
-
-def process_loss(arr: np.ndarray, points: int = None) -> np.ndarray:
-    if points is None:
-        return arr.flatten()
-    elif points == arr.shape[0]:
-        return np.mean(arr, axis=1)
-    else:
-        raise NotImplementedError("Only per-epoch averages are supported")
-
-
-def process_epochs(arr: np.ndarray, points: int = None) -> np.ndarray:
-    if points is None:
-        return arr.flatten()
-    elif points == arr.shape[0]:
-        return arr[:, -1]
-    else:
-        return arr.flatten()[0::len(arr.flatten())//points]
-
-def get_loss(path: Path, points: int = None, validation: bool = False,):
-    if validation:
-        epochs, loss = torch.load(path/'validation_data.pt', weights_only=False)
-    else:
-        epochs, loss = torch.load(path/'loss_data.pt', weights_only=False)
-    return process_epochs(epochs, points), process_loss(loss, points)
+from dtempest.core.common_utils import get_loss
 
 
 def plot_loss(ax, paths: tuple[Path,...]):
+    """
+    Individual loss plot consisting of training and validation curves over multiple stages.
+    """
     points = 15
 
     epochs, losses = [], []
@@ -105,6 +84,9 @@ def loss_plot_with_break():
 
 
 if __name__ == '__main__':
+    """
+    Quick loss plot similar to that of the paper REFERENCE
+    """
     # The three actual stages of the publicated model
     paths = (Path(f'loss_data_GP15_ST1_stage_000'),
              Path(f'loss_data_GP15_ST2_stage_001'),

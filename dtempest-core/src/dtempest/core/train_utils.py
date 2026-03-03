@@ -45,17 +45,15 @@ class H5Dataset(torch.utils.data.Dataset):
             self.dataset = h5py.File(self.file_path, 'r')[self.kind]
         return self.dataset['images'][indexes], self.dataset['labels'][indexes]
     
-    def get_metadata(self, dict_type = True):
+    def get_metadata(self):
         file = h5py.File(self.file_path, 'r')
-        if dict_type:
-            #TODO: Return proper dicts within dicts
-            return dict(file.attrs.items())
-        return file.attrs
-    
-    def get_snr(self, index):
-        if self.dataset is None:
-            self.dataset = h5py.File(self.file_path, 'r')[self.kind]
-        return self.dataset['snrs'][index]
+        return get_metadata(file)
+
+    # For a GW subclass
+    # def get_snr(self, index):
+    #     if self.dataset is None:
+    #         self.dataset = h5py.File(self.file_path, 'r')[self.kind]
+    #     return self.dataset['snrs'][index]
     
     def iter_column(self, column):
         if self.dataset is None:
@@ -65,8 +63,19 @@ class H5Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return self.dataset_len
 
+def get_metadata(file):
+    # https://stackoverflow.com/questions/16547643/convert-a-list-of-delimited-strings-to-a-tree-nested-dict-using-python
+    metadata = {}
+    for keys, val in file.attrs.items():
+        t = metadata
+        parts = keys.split("/")
+        for part in parts[:-1]:
+            t = t.setdefault(part, {})
+        t[parts[-1]] = val
+    return metadata
 
 def h5_collate_fn(x):
+    """Needed for the Dataloader to work properly"""
     return [torch.as_tensor(elem) for elem in x]
 
 # count = 0
@@ -89,6 +98,7 @@ def reset_all_weights(model: nn.Module) -> None:
 
 
 def loss_print(epoch: int, losses: list, code='train', fmt='.3'):
+    """Print loss in a standard format across training"""
     temp_loss = np.array(losses).mean(axis=1)
     deviation = np.array(losses).std(axis=1)
     if epoch > 0:
@@ -102,7 +112,9 @@ def loss_print(epoch: int, losses: list, code='train', fmt='.3'):
 
 
 def train_model(model, dataloader, train_config, valiloader, data_transforms, device):
-    
+    """
+    Main training loop
+    """
     n_epochs = train_config['num_epochs']
     lr = train_config['learning_rate']
     opt = opt_dict[train_config['optim_type']](model.parameters(), lr)

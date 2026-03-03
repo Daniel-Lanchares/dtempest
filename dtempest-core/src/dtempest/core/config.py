@@ -1,9 +1,16 @@
-from typing import TypedDict, Callable
-Title_func = Callable[[str], str]
-Pool_map = dict[str, Callable]
+from typing import TypedDict, Callable, Any
+Title_func = Callable[[Any], str]
+Pool_map = dict[str, Callable[[float,...], float]]
 Label_map = dict[str, str]
 
-def default_title_maker(data):
+"""
+Configuration of the core module. Explicit jargon declarations.
+"""
+
+def default_title_maker(data)->str:
+    """
+    Convenience function for purpose-agnostic titles of images. Meant only as placeholder.
+    """
     return 'RGB image'
 
 Jargon = TypedDict('Jargon', {'parameters': str, 'image': str,
