@@ -1,9 +1,7 @@
 # Licensed under an MIT style license -- see LICENSE.md
 
 from .utils import (
-    logger, number_of_columns_for_legend,
-    # _check_latex_install,
-    gelman_rubin,
+    logger, number_of_columns_for_legend, _check_latex_install, gelman_rubin,
 )
 from .kde import kdeplot
 from .corner import corner
@@ -20,7 +18,7 @@ import numpy as np
 from scipy import signal
 
 __author__ = ["Charlie Hoy <charlie.hoy@ligo.org>"]
-# _check_latex_install()
+_check_latex_install()
 
 _default_legend_kwargs = dict(
     bbox_to_anchor=(0.0, 1.02, 1.0, 0.102), loc=3, handlelength=3, mode="expand",

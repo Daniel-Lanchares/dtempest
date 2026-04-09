@@ -1,9 +1,13 @@
-"""
-Miscellaneous utilities.
-"""
-import pandas as pd
+import torch
+import numpy as np
+from pathlib import Path
+import matplotlib.pyplot as plt
 
+"""
+Various useful functions, maily loss and drawing related.
+"""
 
+# Look for more colors just in case
 class PrintStyle:
     black = '\033[30m'
     red = '\033[31m'
@@ -30,38 +34,92 @@ class PrintStyle:
     invisible = '\033[08m'
 
 
-def identity(x):
+def change_legend_loc(artist, loc: str | int, pos: int = 0) -> None:
     """
-    Naive identity function. Used as default pre-process function.
+    Changes location of a pyplot legend. Unlike redraw_legend, it is non-destructive.
 
     Parameters
     ----------
-    x :
-        Any possible argument
+    artist :
+        holder of the legend.
+    loc :
+        new position.
+    pos :
+        if there al multiple legends, specify position on list.
+    """
+    if isinstance(artist, plt.Axes):
+        legend = artist.get_legend()
+    elif isinstance(artist, plt.Figure):
+        legend = artist.legends[pos]  # A figure can have multiple legends
+    else:
+        raise NotImplementedError(f"Change of legend location is not implemented for objects of type '{type(artist)}'")
 
-    Returns
-    -------
-    out :
-        The passed argument itself
+    if isinstance(loc, str):
+        from matplotlib.offsetbox import AnchoredOffsetbox
+        try:
+            legend._loc = AnchoredOffsetbox.codes[loc]
+        except KeyError as e:
+            raise KeyError(f"Location '{loc}' not valid").with_traceback(e.__traceback__)
+    elif isinstance(loc, int):
+        legend._loc = loc
+    else:
+        raise ValueError(f"Paramemer loc can only be of class 'int' or 'str', not '{type(loc)}'")
 
+
+def redraw_legend(artist, *args, pos: int = 0, **kwargs) -> None:
+    """
+    Redraws a pyplot legend.
+
+    Parameters
+    ----------
+    artist :
+        holder of the legend.
+    args :
+        new arguments for the legend.
+    pos :
+        if there al multiple legends, specify position on list.
+    kwargs :
+        new keyword arguments for the legend.
+    """
+    from matplotlib.legend import Legend
+    if isinstance(artist, plt.Axes):
+        l: Legend = artist.get_legend()
+    elif isinstance(artist, plt.Figure):
+        l: Legend = artist.legends[pos]  # A figure can have multiple legends
+    else:
+        raise NotImplementedError(f"Change of legend location is not implemented for objects of type '{type(artist)}'")
+    handles = l.legend_handles
+
+    linewidth = kwargs.pop('linewidth', None)
+    # Do a more robust implementation for all handler properties if needed
+    if linewidth is not None:
+        for handle in handles:
+            handle.set_linewidth(linewidth)
+
+    l.remove()
+    artist.legend(handles=handles, *args, **kwargs)
+
+
+def identity(x):
+    """
+    Convenience functions that returns the argument it is passed
     """
     return x
 
 
-def get_extractor(name: str):
+def get_extractor(name):
     """
-    Helper function to obtain necessary objects to construct a pre-trained feature extractor from
-    the 'torchvision.models' module.
+    Obtain specific extractor with its weights and preprocessing function.
 
     Parameters
     ----------
     name :
-        Name of the function implementing the architecture.
+        Model code with no symbols or uppercase (e.g. resnet18 for ResNet-18).
 
     Returns
     -------
-    out :
-        (model, pre-trained weights, pre-processing function)
+    model, weights, pre_process
+        The model, the pre-trained weights and the preprocessing pipeline.
 
     """
     import torchvision.models as models
@@ -73,83 +131,76 @@ def get_extractor(name: str):
 
 
 models_dict = {
-    'resnet18': 'ResNet18'
+    'resnet18': 'ResNet18',
+    'resnet50': 'ResNet50'
 }
 
 
-def handle_multi_index_format(temp_df: pd.DataFrame,
-                              # mask_type: str = 'events',
-                              show_reset_index: bool = False,
-                              **format_kwargs) -> tuple[pd.DataFrame, dict]:
+def process_loss(arr: np.ndarray, points: int = None) -> np.ndarray:
     """
-    Deals with duplication of event names when printing Multi-indexed Dataframes (or potentially Series).
-
-    Updated and adapted from answer at
-    https://stackoverflow.com/questions/75575084/transform-a-pandas-multiindex-to-a-single-index-using-indention
-
     Parameters
     ----------
-    temp_df :
-        Dataframe to use for format. SHOULD BE AN OBJECT MEANT FOR FORMATTING ONLY, copied from original.
-    # mask_type :
-        Whether to mask repeating events or parameters.
-    show_reset_index :
-        Whether to keep or discard default indexes.
-    format_kwargs :
-        kwargs to pass to format function (to_markdown, for instance). Either returns them unchanged or
-        with index value overridden.
+    arr :
+        Loss array.
+    points :
+        Number of points of the averaged loss. Currently, supports 1 or number of epochs.
 
     Returns
     -------
-    out :
-        (DataFrame_like, format kwargs)
+    loss array
+        Averaged loss array.
 
     """
-    # we reset the index as mentioned above
-    temp_df.reset_index(inplace=True)
-
-    # then find all the duplicates in the zeroth level
-    mask = temp_df.events.duplicated().values
-    print(mask)
-
-    # and we remove the duplicates
-    temp_df.loc[mask, ('events',)] = ''
-    if not mask.any():
-        mask = temp_df.parameters.duplicated().values
-        print(mask)
-        temp_df.loc[mask, ('parameters',)] = ''
-
-    if not show_reset_index:
-        # Override index specification to avoid showing index 0,1,2...
-        format_kwargs['index'] = False
-
-    return temp_df, format_kwargs
+    if points is None:
+        return arr.flatten()
+    elif points == arr.shape[0]:
+        return np.mean(arr, axis=1)
+    else:
+        raise NotImplementedError("Only per-epoch averages are supported")
 
 
-def merge_headers(string_table: str):
+def process_epochs(arr: np.ndarray, points: int = None) -> np.ndarray:
     """
-    Final stop of latex table custom formatting
-
     Parameters
     ----------
-    string_table :
-        Latex table as a continuous string.
+    arr :
+        Epochs array.
+    points :
+        Number of points to average over.
 
     Returns
     -------
-    out :
-        The string with merged headers (index name should now show next to column names)
+    epochs array
+        Selected epochs.
 
     """
-    rows = string_table.split(r' \\')
-    problem_name = rows.pop(1).split('&')[0]
-    rows[0] = rows[0].replace(r'\toprule', r'\toprule' + problem_name)
+    if points is None:
+        return arr.flatten()
+    elif points == arr.shape[0]:
+        return arr[:, -1]
+    else:
+        return arr.flatten()[0::len(arr.flatten())//points]
 
-    return r' \\'.join(rows)
+def get_loss(path: Path, points: int = None, validation: bool = False,):
+    """
 
+    Parameters
+    ----------
+    path :
+        path to loss file.
+    points :
+        points to average over. Currently, supports 1 or number of epochs.
+    validation: bool
+        Whether it is validation loss.
 
-def is_documented_by(original):
-  def wrapper(target):
-    target.__doc__ = original.__doc__
-    return target
-  return wrapper
+    Returns
+    -------
+    data
+        Epochs and average loss arrays.
+
+    """
+    if validation:
+        epochs, loss = torch.load(path/'validation_data.pt', weights_only=False)
+    else:
+        epochs, loss = torch.load(path/'loss_data.pt', weights_only=False)
+    return process_epochs(epochs, points), process_loss(loss, points)

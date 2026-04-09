@@ -1,10 +1,9 @@
-"""
-Parameter space relations for parameter conversion
-"""
-
 import numpy as np
 
-# kwargs absorbs all unused arguments.
+"""
+Parameter redefinitions for label conversion. 
+"""
+# kwargs is used because we will input all base parameters to all functions
 
 
 def mass_1(mass_1_source, redshift, **kwargs):
@@ -17,21 +16,21 @@ def mass_2(mass_2_source, redshift, **kwargs):
 
 def chirp_mass(mass_1, mass_2, **kwargs):
     """
-    Conversion function: Given some base parameters returns chirp mass.
+    Conversion function: Given 15 base parameters returns chirp mass.
     """
     return pow(mass_1 * mass_2, 3 / 5) / pow(mass_1 + mass_2, 1 / 5)
 
 
 def mass_ratio(mass_1, mass_2, **kwargs):
     """
-    Conversion function: Given some base parameters returns mass ratio.
+    Conversion function: Given 15 base parameters returns mass ratio.
     """
     return np.minimum(mass_1, mass_2) / np.maximum(mass_1, mass_2)
 
 
 def symmetric_mass_ratio(mass_1, mass_2, **kwargs):
     """
-    Conversion function: Given some base parameters returns symmetric mass ratio.
+    Conversion function: Given 15 base parameters returns symmetric mass ratio.
     """
     q = mass_ratio(mass_1, mass_2)
     return q / (1 + q ** 2)
@@ -39,7 +38,7 @@ def symmetric_mass_ratio(mass_1, mass_2, **kwargs):
 
 def chi_1(a_1, tilt_1=0, **kwargs):
     """
-    Conversion function: Given some base parameters returns parallel component of
+    Conversion function: Given 15 base parameters returns parallel component of
     unit-less spin.
 
     If tilt_1 isn't provided assumes aligned spin (might introduce anti-align
@@ -50,7 +49,7 @@ def chi_1(a_1, tilt_1=0, **kwargs):
 
 def chi_2(a_2, tilt_2=0, **kwargs):
     """
-    Conversion function: Given some base parameters returns parallel component of
+    Conversion function: Given 15 base parameters returns parallel component of
     unit-less spin.
 
     If tilt_2 isn't provided assumes aligned spin (might introduce anti-align
@@ -61,7 +60,7 @@ def chi_2(a_2, tilt_2=0, **kwargs):
 
 def chi_eff(mass_1, mass_2, a_1, a_2, tilt_1=0, tilt_2=0, **kwargs):
     """
-    Conversion function: Given some base parameters returns effective spin.
+    Conversion function: Given 15 base parameters returns effective spin.
     """
     chi1 = chi_1(a_1, tilt_1)
     chi2 = chi_2(a_2, tilt_2)
@@ -70,7 +69,7 @@ def chi_eff(mass_1, mass_2, a_1, a_2, tilt_1=0, tilt_2=0, **kwargs):
 
 def chi_1_in_plane(a_1, tilt_1=0, **kwargs):
     """
-    Conversion function: Given some base parameters returns the perpendicular
+    Conversion function: Given 15 base parameters returns the perpendicular
     component of unit-less spin.
     """
     return np.abs(a_1 * np.sin(tilt_1))
@@ -78,7 +77,7 @@ def chi_1_in_plane(a_1, tilt_1=0, **kwargs):
 
 def chi_2_in_plane(a_2, tilt_2=0, **kwargs):
     """
-    Conversion function: Given some base parameters returns the perpendicular
+    Conversion function: Given 15 base parameters returns the perpendicular
     component of unit-less spin.
     """
     return np.abs(a_2 * np.sin(tilt_2))
@@ -86,7 +85,7 @@ def chi_2_in_plane(a_2, tilt_2=0, **kwargs):
 
 def chi_p(mass_1, mass_2, a_1, a_2, tilt_1=0, tilt_2=0, **kwargs):
     """
-    Conversion function: Given some base parameters returns precession spin.
+    Conversion function: Given 15 base parameters returns precession spin.
     """
     q = mass_ratio(mass_1, mass_2)
     chi1_p = chi_1_in_plane(a_1, tilt_1)
@@ -94,8 +93,7 @@ def chi_p(mass_1, mass_2, a_1, a_2, tilt_1=0, tilt_2=0, **kwargs):
     return np.maximum(chi1_p, q * (3 * q + 4) / (4 * q + 3) * chi2_p)
 
 
-def luminosity_distance(z, **kwargs):
-    # import astropy.cosmology as cosmo
+def luminosity_distance(z):
     raise NotImplementedError
 
 

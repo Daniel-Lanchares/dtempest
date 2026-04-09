@@ -241,6 +241,26 @@ class SamplesDict(Dict):
         )
         return modified
 
+    # def standardize_parameter_names(self, mapping=None):
+    #     """Modify keys in SamplesDict to use standard PESummary names
+    #
+    #     Parameters
+    #     ----------
+    #     mapping: dict, optional
+    #         dictionary mapping existing keys to standard PESummary names.
+    #         Default pesummary.gw.file.standard_names.standard_names
+    #
+    #     Returns
+    #     -------
+    #     standard_dict: SamplesDict
+    #         SamplesDict object with standard PESummary parameter names
+    #     """
+    #     from pesummary.utils.utils import map_parameter_names
+    #     if mapping is None:
+    #         from pesummary.gw.file.standard_names import standard_names
+    #         mapping = standard_names
+    #     return SamplesDict(map_parameter_names(self, mapping))
+
     def debug_keys(self, *args, **kwargs):
         _keys = self.keys()
         _total = self.keys(remove_debug=False)
@@ -251,6 +271,17 @@ class SamplesDict(Dict):
         if remove_debug:
             return Parameters([key for key in original if key[0] != "_"])
         return Parameters(original)
+
+    # def write(self, **kwargs):
+    #     """Save the stored posterior samples to file
+    #
+    #     Parameters
+    #     ----------
+    #     **kwargs: dict, optional
+    #         all additional kwargs passed to the pesummary.io.write function
+    #     """
+    #     from pesummary.io import write
+    #     write(self.parameters, self.samples.T, **kwargs)
 
     def items(self, *args, remove_debug=True, **kwargs):
         items = super(SamplesDict, self).items(*args, **kwargs)
@@ -373,6 +404,38 @@ class SamplesDict(Dict):
     ''' 
     def generate_all_possible_params() 
     '''
+
+    # def reweight(
+    #     self, function, ignore_debug_params=["recalib", "spcal"], **kwargs
+    # ):
+    #     """Reweight the posterior samples according to a new prior
+    #
+    #     Parameters
+    #     ----------
+    #     function: func/str
+    #         function to use when resampling
+    #     ignore_debug_params: list, optional
+    #         params to ignore when storing unweighted posterior distributions.
+    #         Default any param with ['recalib', 'spcal'] in their name
+    #     """
+    #     from pesummary.gw.reweight import options
+    #     if isinstance(function, str) and function in options.keys():
+    #         function = options[function]
+    #     elif isinstance(function, str):
+    #         raise ValueError(
+    #             "Unknown function '{}'. Please provide a function for "
+    #             "reweighting or select one of the following: {}".format(
+    #                 function, ", ".join(list(options.keys()))
+    #             )
+    #         )
+    #     _samples = SamplesDict(self.copy())
+    #     new_samples = function(_samples, **kwargs)
+    #     _samples.downsample(new_samples.number_of_samples)
+    #     for key, item in new_samples.items():
+    #         if not any(param in key for param in ignore_debug_params):
+    #             _samples["_{}_non_reweighted".format(key)] = _samples[key]
+    #         _samples[key] = item
+    #     return SamplesDict(_samples)
 
     def _marginalized_posterior(self, parameter, module="core", **kwargs):
         """Wrapper for the `pesummary.core.plots.plot._1d_histogram_plot` or
@@ -1273,28 +1336,28 @@ class MCMCSamplesDict(_MultiDimensionalSamplesDict):
             self[chain].discard_samples(number[chain])
         return self
 
-    # def burnin(self, *args, algorithm="burnin_by_step_number", **kwargs):
-    #     """Remove the first N samples as burnin
-    #
-    #     Parameters
-    #     ----------
-    #     algorithm: str, optional
-    #         The algorithm you wish to use to remove samples as burnin. Default
-    #         is 'burnin_by_step_number'. See
-    #         `pesummary.core.file.mcmc.algorithms` for list of available
-    #         algorithms
-    #     """
-    #
-    #     # TODO (Not urgent)
-    #     from pesummary.core.file import mcmc
-    #
-    #     if algorithm not in mcmc.algorithms:
-    #         raise ValueError(
-    #             "{} is not a valid algorithm for removing samples as "
-    #             "burnin".format(algorithm)
-    #         )
-    #     arguments = [self] + [i for i in args]
-    #     return getattr(mcmc, algorithm)(*arguments, **kwargs)
+    def burnin(self, *args, algorithm="burnin_by_step_number", **kwargs):
+        """Remove the first N samples as burnin
+
+        Parameters
+        ----------
+        algorithm: str, optional
+            The algorithm you wish to use to remove samples as burnin. Default
+            is 'burnin_by_step_number'. See
+            `pesummary.core.file.mcmc.algorithms` for list of available
+            algorithms
+        """
+
+        # TODO (Not urgent)
+        from pesummary.core.file import mcmc
+
+        if algorithm not in mcmc.algorithms:
+            raise ValueError(
+                "{} is not a valid algorithm for removing samples as "
+                "burnin".format(algorithm)
+            )
+        arguments = [self] + [i for i in args]
+        return getattr(mcmc, algorithm)(*arguments, **kwargs)
 
     def gelman_rubin(self, parameter, decimal=5):
         """Return the gelman rubin statistic between chains for a given

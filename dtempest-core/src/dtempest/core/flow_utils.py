@@ -1,6 +1,3 @@
-"""
-Flow transforms and utilities.
-"""
 import torch
 from typing import Callable
 from glasflow.nflows import distributions, flows, transforms, utils
@@ -8,45 +5,38 @@ import glasflow.nflows.nn.nets as nflows_nets
 import torch.nn.functional as F
 
 
-def create_flow(
+"""
+Collection of transforms for normalizing flows.
+Adapted from DINGO and Nflows.
+"""
+
+def create_flow(  # Adapted from DINGO
         input_dim: int,
         context_dim: int,
         num_flow_steps: int,
         base_transform: Callable, middle_transform: Callable,
         base_transform_kwargs: dict, middle_transform_kwargs: dict,
         final_transform: Callable, final_transform_kwargs: dict,
-        emb_net=None,
+        emb_net=None
 ):
     """
-    Adapted from https://github.com/dingo-gw/dingo/tree/main/dingo.
-
     Build NSF model. This models the posterior distribution p(y|x).
     The model consists of
         * a base distribution (StandardNormal, dim(y))
         * a sequence of transforms, each conditioned on x
     :param input_dim: int,
-        Dimensionality of y.
+        dimensionality of y
     :param context_dim: int,
-        Dimensionality of the (embedded) context.
+        dimensionality of the (embedded) context
     :param num_flow_steps: int,
-        Number of sequential transforms.
-    :param base_transform: Callable,
-        Main transform of a flow step. Context-sensitive.
-    :param middle_transform: Callable,
-        Intermediate transform of a flow step. Need not be context-sensitive.
+        number of sequential transforms
     :param base_transform_kwargs: dict,
-        Hyperparameters for the base transform, repeated in every step.
-    :param middle_transform_kwargs: dict,
-        Hyperparameters for the middle transform, repeated in every step.
-    :param final_transform: Callable,
-        Last transform of the samples. Need not be context-sensitive.
-    :param final_transform_kwargs: dict,
-        Hyperparameters for the final transform.
-    :param emb_net: torch.nn.Module, None,
-        Embedding net for the flow.
+        hyperparameters for the transform repeated in every step
+    :param emb_net: torch.nn.Module, None
+        Embedding net for the flow
 
     :return: Flow
-        The posterior model.
+        the NSF (posterior model)
     """
 
     # We will always start from a N(0, 1)
@@ -57,7 +47,9 @@ def create_flow(
         base_transform_kwargs, middle_transform_kwargs,
         final_transform, final_transform_kwargs
     )
-    return flows.Flow(transform, distribution, embedding_net=emb_net)
+    flow = flows.Flow(transform, distribution, embedding_net=emb_net)
+
+    return flow
 
 
 def create_transform(
@@ -67,37 +59,26 @@ def create_transform(
         final_transform: Callable, final_transform_kwargs: dict
 ):
     """
-    Adapted from https://github.com/dingo-gw/dingo/tree/main/dingo.
+    Right now straight from DINGO. Will adapt as needed
     
-    Build a sequence of custom transforms, which maps parameters y into the
+    Build a sequence of NSF transforms, which maps parameters y into the
     base distribution u (noise). Transforms are conditioned on context data x.
 
     Note that the forward map is f^{-1}(y, x).
 
     Each step in the sequence consists of
-        * An custom intermediate transform of y, usually context-insensitive.
-        * A complex (NSF+affine in the example) transform of y, conditioned on x.
-    There is one final customizable transform at the end.
+        * A linear transform of y, which in particular permutes components
+        * A NSF transform of y, conditioned on x.
+    There is one final linear transform at the end.
 
     :param num_flow_steps: int,
-        Number of transforms in sequence.
+        number of transforms in sequence
     :param param_dim: int,
-        Dimensionality of parameter space (y).
+        dimensionality of parameter space (y)
     :param context_dim: int,
-        Dimensionality of context (x).
-    :param base_transform: Callable,
-        Main transform of a flow step. Context-sensitive.
-    :param middle_transform: Callable,
-        Intermediate transform of a flow step. Need not be context-sensitive.
-    :param base_transform_kwargs: dict,
-        Hyperparameters for the base transform, repeated in every step.
-    :param middle_transform_kwargs: dict,
-        Hyperparameters for the middle transform, repeated in every step.
-    :param final_transform: Callable,
-        Last transform of the samples. Need not be context-sensitive.
-    :param final_transform_kwargs: dict,
-        Hyperparameters for the final transform.
-
+        dimensionality of context (x)
+    :param base_transform_kwargs: int
+        hyperparameters for NSF step
     :return: Transform
         the NSF transform sequence
     """
@@ -142,8 +123,6 @@ def mask_affine_autoreg(i: int,
                         activation: str | Callable = F.relu,
                         dropout_probability=0.0,
                         use_batch_norm: bool = False):
-    """Reverse permutation + masked affine autoregressive transform.
-    See https://arxiv.org/abs/1705.07057 for the later."""
     if type(activation) is str:
         activation = get_activation_function_from_string(activation)
     return transforms.CompositeTransform([
@@ -291,8 +270,6 @@ def dingo_rq_coupling(i: int,
                       tail_bound: float = 1.0,
                       apply_unconditional_transform: bool = False,
                       ):
-    """Dingo's implementation of a rq-coupling transform.
-    https://github.com/dingo-gw/dingo/blob/main/dingo/core/nn/nsf.py#L99"""
     if type(activation) is str:
         activation = get_activation_function_from_string(activation)
     if param_dim == 1:
@@ -334,8 +311,6 @@ def dingo_rq_autoreg(i: int,
                      tail_bound: float = 1.0,
                      apply_unconditional_transform: bool = False,
                      ):
-    """Dingo's implementation of a rq-autoregressive transform.
-        https://github.com/dingo-gw/dingo/blob/main/dingo/core/nn/nsf.py#L126"""
     return transforms.MaskedPiecewiseRationalQuadraticAutoregressiveTransform(
         features=param_dim,
         hidden_features=hidden_dim,
@@ -366,7 +341,6 @@ def d_rq_coupling_and_affine(i: int,
                              use_residual_blocks=True,
                              random_mask=False,
                              ):
-    """Composition of rq-coupling and autoregressive transforms 1 to 1."""
     return transforms.CompositeTransform([
         dingo_rq_coupling(i,
                           param_dim,
@@ -391,7 +365,7 @@ def d_rq_coupling_and_affine(i: int,
                             use_batch_norm)
 
     ])
-
+    
 def d_rq_coupling_half_affine(i: int,
                             param_dim: int,
                             context_dim: int,
@@ -406,7 +380,6 @@ def d_rq_coupling_half_affine(i: int,
                             use_residual_blocks=True,
                             random_mask=False,
                             ):
-    """Composition of rq-coupling and autoregressive transforms 2 to 1."""
     if i % 2 == 0:
         return d_rq_coupling_and_affine(i,
                                         param_dim,
@@ -435,26 +408,16 @@ def d_rq_coupling_half_affine(i: int,
                           apply_unconditional_transform)
 
 
-
 transform_ref = {f.__name__: f for f in [random_perm_and_lulinear,
                                          mask_affine_autoreg,
                                          mask_piece_q_autoreg,
                                          mask_piece_rq_autoreg,
                                          dingo_rq_autoreg,
-                                         dingo_rq_coupling,
-                                         d_rq_coupling_and_affine,
-                                         d_rq_coupling_half_affine]}
-hidden_layer_dict = {random_perm_and_lulinear: 0,
-                     mask_affine_autoreg: 2,
-                     mask_piece_q_autoreg: None,
-                     mask_piece_rq_autoreg: None,
-                     dingo_rq_autoreg: 2,
-                     dingo_rq_coupling: 2,
-                     d_rq_coupling_and_affine: 4,
-                     d_rq_coupling_half_affine: 3} # Actually, it is 4,2,4,2,4...
+                                         dingo_rq_coupling]}
+
 
 def get_activation_function_from_string(activation_name: str):
-    """
+    """ From dingo library
     Returns an activation function, based on the name provided.
 
     :param activation_name: str
@@ -470,10 +433,3 @@ def get_activation_function_from_string(activation_name: str):
         return F.leaky_relu
     else:
         raise ValueError("Invalid activation function.")
-
-
-def get_transform_hidden_layers(t: Callable, kwargs):
-    # raise NotImplementedError
-    assert 'num_transform_blocks' in kwargs.keys(), "Current implementation of hidden layer enumeration requieres 'num_transform_blocks'."
-    assert t in hidden_layer_dict.keys(), "Current implementation of hidden layer enumeration is only valid for dtempest transforms."
-    return kwargs['num_transform_blocks']*hidden_layer_dict[t]

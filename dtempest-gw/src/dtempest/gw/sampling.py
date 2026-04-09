@@ -1,28 +1,17 @@
-"""
-Classes and utilities for GW-adapted sampling.
-"""
-import numpy as np
-from pathlib import Path
 from functools import partialmethod
+from pathlib import Path
 
+import numpy as np
 
-from dtempest.core._pesummary_dependencies.samples_dict import MultiAnalysisSamplesDict
-from dtempest.core.sample_utils import SampleDict, SampleSet, MSEDataFrame, MSESeries, ComparisonSampleDict
+from dtempest.core._pesum_deps.samples_dict import MultiAnalysisSamplesDict
+from dtempest.core.sampling import SampleDict, ComparisonSampleDict
 from .config import cbc_jargon
 
-
-
-class CBCMSESeries(MSESeries):
-    __init__ = partialmethod(MSESeries.__init__, jargon=cbc_jargon)
-
-
-class CBCMSEDataFrame(MSEDataFrame):
-    __init__ = partialmethod(MSEDataFrame.__init__, jargon=cbc_jargon, _series_class=CBCMSESeries)
-
+"""Sample containers with gw-oriented plotting routines"""
 
 class CBCSampleDict(SampleDict):
     __init__ = partialmethod(SampleDict.__init__,
-                             jargon=cbc_jargon, _series_class=CBCMSESeries, _dataframe_class=CBCMSEDataFrame)
+                             jargon=cbc_jargon)
 
     @classmethod
     def from_file(cls, filename: Path | str, **kwargs):
@@ -51,7 +40,7 @@ class CBCSampleDict(SampleDict):
         write(self.parameters, self.samples.T, **kwargs)
 
     from_samplesdict = partialmethod(SampleDict.from_samplesdict,
-                                     jargon=cbc_jargon, _series_class=CBCMSESeries, _dataframe_class=CBCMSEDataFrame)
+                                     jargon=cbc_jargon)
 
     def default_bounds(self, parameters=None, comparison=False):
         if parameters is None:
@@ -124,7 +113,6 @@ class CBCSampleDict(SampleDict):
 
         return _ligo_skymap_plot(self["ra"], self["dec"], dist=dist, **kwargs)
 
-
     def _spin_disk(self, **kwargs):
         """Wrapper for the `pesummary.gw.plots.publication.spin_distribution_plots`
         function
@@ -193,11 +181,6 @@ class CBCSampleDict(SampleDict):
         )
 
 
-class CBCSampleSet(SampleSet):
-    __init__ = partialmethod(SampleSet.__init__,
-                             _series_class=CBCMSESeries, _dataframe_class=CBCMSEDataFrame, jargon=cbc_jargon)
-
-
 class CBCComparisonSampleDict(ComparisonSampleDict):  # Subclassing two classes is problematic. Careful
 
     @classmethod
@@ -259,9 +242,9 @@ class CBCComparisonSampleDict(ComparisonSampleDict):  # Subclassing two classes 
         ----------
         labels: list, optional
             list of analyses that you wish to save to file. Default save all
-            analyses to file
+            analyses to file.
         **kwargs: dict, optional
-            all additional kwargs passed to the pesummary.io.write function
+            all additional kwargs passed to the pesummary.io.write function.
         """
         if labels is None:
             labels = self.labels
@@ -321,6 +304,7 @@ class CBCComparisonSampleDict(ComparisonSampleDict):  # Subclassing two classes 
 
 
 def _default_bounds(samples, parameters, comparison=False):
+    """Thin wrapper around pesummary's _return_bounds for our classes"""
     from pesummary.gw.plots.plot import _return_bounds
     from collections import OrderedDict
     bounds = OrderedDict()
@@ -335,11 +319,15 @@ def nan_check(vector, f_type: str = 'max'):
 
     Parameters
     ----------
-    vector : list of values to filter
-    f_type : take minimum or maximum
+    vector :
+        List of values to filter.
+    f_type :
+        Take minimum or maximum.
 
-    Returns Max/min of list, or None if not available
+    Returns
     -------
+    extreme : np.float64
+        Max/min of list, or None if not available
 
     """
     mapping = {'min': np.nanmin, 'max': np.nanmax}

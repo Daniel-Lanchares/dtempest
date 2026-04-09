@@ -243,25 +243,19 @@ def corner(
         truths=None, truth_color="#4682b4", scale_hist=False,
         quantiles=None, verbose=False, fig=None, max_n_ticks=5,
         top_ticks=False, use_math_text=False, reverse=False,
-        labelpad=0.0, hist_kwargs=None,
+        labelpad=0.0, hist_kwargs={},
         # Arviz parameters
         group="posterior", var_names=None, filter_vars=None,
         coords=None, divergences=False, divergences_kwargs=None,
         labeller=None,
         # New parameters
-        kde=None, kde_kwargs=None, kde_2d=None, kde_2d_kwargs=None,
+        kde=None, kde_kwargs={}, kde_2d=None, kde_2d_kwargs={},
         N=100, **hist2d_kwargs,
 ):
     """Wrapper for corner.corner which adds additional functionality
     to plot custom KDEs along the leading diagonal and custom 2D
     KDEs in the 2D panels
     """
-    if kde_2d_kwargs is None:
-        kde_2d_kwargs = {}
-    if kde_kwargs is None:
-        kde_kwargs = {}
-    if hist_kwargs is None:
-        hist_kwargs = {}
     from corner import corner
     if kde is not None:
         hist_kwargs["linewidth"] = 0.

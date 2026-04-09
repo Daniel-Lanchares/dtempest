@@ -48,7 +48,7 @@ def resample_posterior_distribution(posterior, nsamples):
     if len(posterior) == 1:
         n, bins = np.histogram(posterior, bins=50)
         n = np.array([0] + [i for i in n])
-        cdf = cumulative_trapezoid(n, bins, initial=0)
+        cdf = cumtrapz(n, bins, initial=0)
         cdf /= cdf[-1]
         icdf = interp1d(cdf, bins)
         samples = icdf(np.random.rand(nsamples))
@@ -513,15 +513,15 @@ class RedirectLogger(object):
 
 
 # def _draw_conditioned_prior_samples(
-#     prior_sample, posterior_samples, xlow, xhigh, xN=1000, N=1000
+#     prior_samples, posterior_samples, xlow, xhigh, xN=1000, N=1000
 # ):
 #     """Return a list of indices for the conditioned prior via rejection
-#     sampling. The conditioned prior will then be `prior_sample[indicies]`.
+#     sampling. The conditioned prior will then be `prior_samples[indicies]`.
 #     Code from Michael Puerrer.
 #
 #     Parameters
 #     ----------
-#     prior_sample: np.ndarray
+#     prior_samples: np.ndarray
 #         array of prior samples that you wish to condition
 #     posterior_samples: np.ndarray
 #         array of posterior samples that you wish to condition on
@@ -536,7 +536,7 @@ class RedirectLogger(object):
 #     """
 #     from pesummary.utils.bounded_1d_kde import ReflectionBoundedKDE
 #
-#     prior_KDE = ReflectionBoundedKDE(prior_sample)
+#     prior_KDE = ReflectionBoundedKDE(prior_samples)
 #     posterior_KDE = ReflectionBoundedKDE(posterior_samples)
 #
 #     x = np.linspace(xlow, xhigh, xN)
@@ -547,8 +547,8 @@ class RedirectLogger(object):
 #     indicies = []
 #     i = 0
 #     while i < N:
-#         x_i = np.random.choice(prior_sample)
-#         idx_i = np.argmin(np.abs(prior_sample - x_i))
+#         x_i = np.random.choice(prior_samples)
+#         idx_i = np.argmin(np.abs(prior_samples - x_i))
 #         u = np.random.uniform()
 #         if u < posterior_KDE(x_i) / (M * prior_KDE(x_i)):
 #             indicies.append(idx_i)
@@ -631,24 +631,24 @@ def unzip(zip_file, outdir=None, overwrite=False):
 #         return iterable
 
 
-# def _check_latex_install(force_tex=False):
-#     from matplotlib import rcParams
-#     from distutils.spawn import find_executable
-#
-#     original = rcParams['text.usetex']
-#     if find_executable("latex") is not None:
-#         try:
-#             from matplotlib.texmanager import TexManager
-#
-#             texmanager = TexManager()
-#             texmanager.make_dvi(r"$mass_{1}$", 12)
-#             if force_tex:
-#                 original = True
-#             rcParams["text.usetex"] = original
-#         except RuntimeError:
-#             rcParams["text.usetex"] = False
-#     else:
-#         rcParams["text.usetex"] = False
+def _check_latex_install(force_tex=False):
+    from matplotlib import rcParams
+    from distutils.spawn import find_executable
+
+    original = rcParams['text.usetex']
+    if find_executable("latex") is not None:
+        try:
+            from matplotlib.texmanager import TexManager
+
+            texmanager = TexManager()
+            texmanager.make_dvi(r"$mass_{1}$", 12)
+            if force_tex:
+                original = True
+            rcParams["text.usetex"] = original
+        except RuntimeError:
+            rcParams["text.usetex"] = False
+    else:
+        rcParams["text.usetex"] = False
 
 
 def smart_round(parameters, return_latex=False, return_latex_row=False):
